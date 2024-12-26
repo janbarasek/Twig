@@ -266,6 +266,7 @@ final class CoreExtension extends AbstractExtension
             // iteration and runtime
             new TwigFilter('default', [self::class, 'default'], ['node_class' => DefaultFilter::class]),
             new TwigFilter('keys', [self::class, 'keys']),
+            new TwigFilter('invoke', [self::class, 'invoke']),
         ];
     }
 
@@ -913,6 +914,20 @@ final class CoreExtension extends AbstractExtension
         }
 
         return array_keys($array);
+    }
+
+    /**
+     * Invokes a callable
+     *
+     * @param callable $callable
+     * @param ...$arguments
+     * @return mixed
+     *
+     * @internal
+     */
+    public static function invoke(callable $callable, ...$arguments): mixed
+    {
+        return $callable(...$arguments);
     }
 
     /**
