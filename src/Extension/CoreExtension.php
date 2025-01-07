@@ -266,7 +266,7 @@ final class CoreExtension extends AbstractExtension
             // iteration and runtime
             new TwigFilter('default', [self::class, 'default'], ['node_class' => DefaultFilter::class]),
             new TwigFilter('keys', [self::class, 'keys']),
-            new TwigFilter('invoke', [self::class, 'invoke'], ['needs_environment' => true]),
+            new TwigFilter('invoke', [self::class, 'invoke']),
         ];
     }
 
@@ -919,14 +919,10 @@ final class CoreExtension extends AbstractExtension
     /**
      * Invokes a callable
      *
-     * @param \Closure $arrow
-     *
      * @internal
      */
-    public static function invoke(Environment $env, $arrow, ...$arguments): mixed
+    public static function invoke(\Closure $arrow, ...$arguments): mixed
     {
-        self::checkArrow($env, $arrow, 'invoke', 'filter');
-
         return $arrow(...$arguments);
     }
 
