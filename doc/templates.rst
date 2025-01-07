@@ -1018,6 +1018,12 @@ The following operators don't fit into any of the other categories:
     Arrow function support for functions, macros, and method calls was added in
     Twig 3.15 (filters and tests were already supported).
 
+  Arrow functions can be invoked using the ``invoke`` filter.
+
+    .. versionadded:: 3.19
+
+    The ``invoke`` filter has been added in Twig 3.19.
+
 Operators
 ~~~~~~~~~
 
