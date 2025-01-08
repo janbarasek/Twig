@@ -1,7 +1,7 @@
 ``invoke``
 =======
 
-The ``invoke`` filter invokes an arrow function with the the given arguments:
+The ``invoke`` filter invokes an arrow function with the given arguments:
 
 .. code-block:: twig
 
