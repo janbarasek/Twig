@@ -6,17 +6,23 @@
     The ``types`` tag was added in Twig 3.13. This tag is **experimental** and
     can change based on usage and feedback.
 
-The ``types`` tag declares the types of template variables.
+Use the ``types`` tag to declare the type of a variable:
 
-.. note::
+.. code-block:: twig
 
-    The types declared in a template are local to that template and must not be
-    propagated to included templates. This is because a template can be
-    included from multiple different places, each potentially having different
-    variable types.
+    {% types is_correct: 'boolean' %}
+    {% types score: 'number' %}
 
-Here is how to declare that ``is_correct`` is a boolean, while ``score`` is a
-number (see note below):
+Or multiple variables:
+
+.. code-block:: twig
+
+    {% types
+        is_correct: 'boolean',
+        score: 'number',
+    %}
+
+You can also enclose types with ``{}``:
 
 .. code-block:: twig
 
@@ -25,7 +31,7 @@ number (see note below):
         score: 'number',
     } %}
 
-You can declare variables as optional by adding the ``?`` suffix:
+Declare optional variables by adding a ``?`` suffix:
 
 .. code-block:: twig
 
@@ -42,6 +48,13 @@ validate variables or their types, this tag enables extensions to do this.
 
 Additionally, :ref:`Twig extensions <creating_extensions>` can analyze these
 tags to perform compile-time and runtime analysis of templates.
+
+.. note::
+
+    The types declared in a template are local to that template and must not be
+    propagated to included templates. This is because a template can be
+    included from multiple different places, each potentially having different
+    variable types.
 
 .. note::
 
