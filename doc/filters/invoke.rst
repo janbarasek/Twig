@@ -1,6 +1,10 @@
 ``invoke``
 ==========
 
+.. versionadded:: 3.19
+
+    The ``invoke`` filter has been added in Twig 3.19.
+
 The ``invoke`` filter invokes an arrow function with the given arguments:
 
 .. code-block:: twig
@@ -10,10 +14,3 @@ The ``invoke`` filter invokes an arrow function with the given arguments:
 
     {{ func|invoke(person) }}
     {# outputs Bob Smith #}
-
-Note that the arrow function has access to the current context.
-
-Arguments
----------
-
-All given arguments are passed to the arrow function.

@@ -1,6 +1,5 @@
 # 3.19.0 (2025-XX-XX)
 
- * Add `LastModifiedExtensionInterface` and implementation in `AbstractExtension` to track modification of runtime classes
  * Add the `invoke` filter
  * Make `{}` optional for the `types` tag
  * Add `LastModifiedExtensionInterface` and implementation in `AbstractExtension` to track modification of runtime classes
