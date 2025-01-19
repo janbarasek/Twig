@@ -26,6 +26,8 @@ use Twig\Loader\FilesystemLoader;
 use Twig\Loader\LoaderInterface;
 use Twig\Node\Node;
 use Twig\NodeVisitor\NodeVisitorInterface;
+use Twig\Operator\Binary\AbstractBinaryOperator;
+use Twig\Operator\Unary\AbstractUnaryOperator;
 use Twig\RuntimeLoader\RuntimeLoaderInterface;
 use Twig\Source;
 use Twig\Token;
@@ -307,8 +309,8 @@ class EnvironmentTest extends TestCase
         $this->assertArrayHasKey('foo_filter', $twig->getFilters());
         $this->assertArrayHasKey('foo_function', $twig->getFunctions());
         $this->assertArrayHasKey('foo_test', $twig->getTests());
-        $this->assertArrayHasKey('foo_unary', $twig->getUnaryOperators());
-        $this->assertArrayHasKey('foo_binary', $twig->getBinaryOperators());
+        $this->assertNotNull($twig->getOperators()->getUnary('foo_unary'));
+        $this->assertNotNull($twig->getOperators()->getBinary('foo_binary'));
         $this->assertArrayHasKey('foo_global', $twig->getGlobals());
         $visitors = $twig->getNodeVisitors();
         $found = false;
@@ -597,8 +599,38 @@ class EnvironmentTest_Extension extends AbstractExtension implements GlobalsInte
     public function getOperators(): array
     {
         return [
-            ['foo_unary' => ['precedence' => 0]],
-            ['foo_binary' => ['precedence' => 0]],
+            new class extends AbstractUnaryOperator {
+                public function getOperator(): string
+                {
+                    return 'foo_unary';
+                }
+
+                public function getPrecedence(): int
+                {
+                    return 0;
+                }
+
+                public function getNodeClass(): string
+                {
+                    return '';
+                }
+            },
+            new class extends AbstractBinaryOperator {
+                public function getOperator(): string
+                {
+                    return 'foo_binary';
+                }
+
+                public function getPrecedence(): int
+                {
+                    return 0;
+                }
+
+                public function getNodeClass(): string
+                {
+                    return '';
+                }
+            },
         ];
     }
 

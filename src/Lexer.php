@@ -544,11 +544,10 @@ class Lexer
 
     private function getOperatorRegex(): string
     {
-        $operators = array_merge(
-            ['='],
-            array_keys($this->env->getUnaryOperators()),
-            array_keys($this->env->getBinaryOperators())
-        );
+        $operators = ['='];
+        foreach ($this->env->getOperators() as $operator) {
+            $operators = array_merge($operators, [$operator->getOperator()], $operator->getAliases());
+        }
 
         $operators = array_combine($operators, array_map('strlen', $operators));
         arsort($operators);

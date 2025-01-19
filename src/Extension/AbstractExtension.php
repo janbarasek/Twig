@@ -40,7 +40,7 @@ abstract class AbstractExtension implements LastModifiedExtensionInterface
 
     public function getOperators()
     {
-        return [[], []];
+        return [];
     }
 
     public function getLastModified(): int

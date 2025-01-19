@@ -16,9 +16,12 @@ use Twig\Extension\ExtensionInterface;
 use Twig\Extension\GlobalsInterface;
 use Twig\Extension\LastModifiedExtensionInterface;
 use Twig\Extension\StagingExtension;
-use Twig\Node\Expression\Binary\AbstractBinary;
-use Twig\Node\Expression\Unary\AbstractUnary;
 use Twig\NodeVisitor\NodeVisitorInterface;
+use Twig\Operator\Binary\AbstractBinaryOperator;
+use Twig\Operator\OperatorAssociativity;
+use Twig\Operator\OperatorInterface;
+use Twig\Operator\Operators;
+use Twig\Operator\Unary\AbstractUnaryOperator;
 use Twig\TokenParser\TokenParserInterface;
 
 /**
@@ -46,10 +49,8 @@ final class ExtensionSet
     private $functions;
     /** @var array<string, TwigFunction> */
     private $dynamicFunctions;
-    /** @var array<string, array{precedence: int, precedence_change?: OperatorPrecedenceChange, class: class-string<AbstractUnary>}> */
-    private $unaryOperators;
-    /** @var array<string, array{precedence: int, precedence_change?: OperatorPrecedenceChange, class?: class-string<AbstractBinary>, associativity: ExpressionParser::OPERATOR_*}> */
-    private $binaryOperators;
+    /** @var Operators */
+    private $operators;
     /** @var array<string, mixed>|null */
     private $globals;
     /** @var array<callable(string): (TwigFunction|false)> */
@@ -406,28 +407,13 @@ final class ExtensionSet
         return null;
     }
 
-    /**
-     * @return array<string, array{precedence: int, precedence_change?: OperatorPrecedenceChange, class: class-string<AbstractUnary>}>
-     */
-    public function getUnaryOperators(): array
+    public function getOperators(): Operators
     {
         if (!$this->initialized) {
             $this->initExtensions();
         }
 
-        return $this->unaryOperators;
-    }
-
-    /**
-     * @return array<string, array{precedence: int, precedence_change?: OperatorPrecedenceChange, class?: class-string<AbstractBinary>, associativity: ExpressionParser::OPERATOR_*}>
-     */
-    public function getBinaryOperators(): array
-    {
-        if (!$this->initialized) {
-            $this->initExtensions();
-        }
-
-        return $this->binaryOperators;
+        return $this->operators;
     }
 
     private function initExtensions(): void
@@ -440,8 +426,7 @@ final class ExtensionSet
         $this->dynamicFunctions = [];
         $this->dynamicTests = [];
         $this->visitors = [];
-        $this->unaryOperators = [];
-        $this->binaryOperators = [];
+        $this->operators = new Operators();
 
         foreach ($this->extensions as $extension) {
             $this->initExtension($extension);
@@ -497,12 +482,110 @@ final class ExtensionSet
                 throw new \InvalidArgumentException(\sprintf('"%s::getOperators()" must return an array with operators, got "%s".', \get_class($extension), get_debug_type($operators).(\is_resource($operators) ? '' : '#'.$operators)));
             }
 
-            if (2 !== \count($operators)) {
-                throw new \InvalidArgumentException(\sprintf('"%s::getOperators()" must return an array of 2 elements, got %d.', \get_class($extension), \count($operators)));
+            // new signature?
+            $legacy = false;
+            foreach ($operators as $op) {
+                if (!$op instanceof OperatorInterface) {
+                    $legacy = true;
+
+                    break;
+                }
             }
 
-            $this->unaryOperators = array_merge($this->unaryOperators, $operators[0]);
-            $this->binaryOperators = array_merge($this->binaryOperators, $operators[1]);
+            if ($legacy) {
+                if (2 !== \count($operators)) {
+                    throw new \InvalidArgumentException(\sprintf('"%s::getOperators()" must return an array of 2 elements, got %d.', \get_class($extension), \count($operators)));
+                }
+
+                trigger_deprecation('twig/twig', '3.19.0', \sprintf('Extension "%s" uses the old signature for "getOperators()", please update it to return an array of "OperatorInterface" objects.', \get_class($extension)));
+
+                $ops = [];
+                foreach ($operators[0] as $n => $op) {
+                    $ops[] = $op instanceof OperatorInterface ? $op : $this->convertUnaryOperators($n, $op);
+                }
+                foreach ($operators[1] as $n => $op) {
+                    $ops[] = $op instanceof OperatorInterface ? $op : $this->convertBinaryOperators($n, $op);
+                }
+                $this->operators->add($ops);
+            } else {
+                $this->operators->add($operators);
+            }
         }
+    }
+
+    private function convertUnaryOperators(string $n, array $op): OperatorInterface
+    {
+        trigger_deprecation('twig/twig', '3.19.0', \sprintf('Using a non-OperatorInterface object to define the "%s" unary operator is deprecated.', $n));
+
+        return new class($op, $n) extends AbstractUnaryOperator {
+            public function __construct(private array $op, private string $operator)
+            {
+            }
+
+            public function getOperator(): string
+            {
+                return $this->operator;
+            }
+
+            public function getPrecedence(): int
+            {
+                return $this->op['precedence'];
+            }
+
+            public function getPrecedenceChange(): ?OperatorPrecedenceChange
+            {
+                return $this->op['precedence_change'] ?? null;
+            }
+
+            public function getNodeClass(): ?string
+            {
+                return $this->op['class'] ?? null;
+            }
+        };
+    }
+
+    private function convertBinaryOperators(string $n, array $op): OperatorInterface
+    {
+        trigger_deprecation('twig/twig', '3.19.0', \sprintf('Using a non-OperatorInterface object to define the "%s" binary operator is deprecated.', $n));
+
+        return new class($op, $n) extends AbstractBinaryOperator {
+            public function __construct(private array $op, private string $operator)
+            {
+            }
+
+            public function getOperator(): string
+            {
+                return $this->operator;
+            }
+
+            public function getPrecedence(): int
+            {
+                return $this->op['precedence'];
+            }
+
+            public function getPrecedenceChange(): ?OperatorPrecedenceChange
+            {
+                return $this->op['precedence_change'] ?? null;
+            }
+
+            public function getNodeClass(): ?string
+            {
+                return $this->op['class'] ?? null;
+            }
+
+            public function getAssociativity(): OperatorAssociativity
+            {
+                return match ($this->op['associativity']) {
+                    1 => OperatorAssociativity::Left,
+                    2 => OperatorAssociativity::Right,
+                    default => throw new \InvalidArgumentException(\sprintf('Invalid associativity "%s" for operator "%s".', $this->op['associativity'], $this->getOperator())),
+                };
+            }
+
+            public function getCallable(): ?callable
+            {
+                return $this->op['callable'] ?? null;
+            }
+        };
     }
 }

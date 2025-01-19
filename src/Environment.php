@@ -27,11 +27,10 @@ use Twig\Extension\YieldNotReadyExtension;
 use Twig\Loader\ArrayLoader;
 use Twig\Loader\ChainLoader;
 use Twig\Loader\LoaderInterface;
-use Twig\Node\Expression\Binary\AbstractBinary;
-use Twig\Node\Expression\Unary\AbstractUnary;
 use Twig\Node\ModuleNode;
 use Twig\Node\Node;
 use Twig\NodeVisitor\NodeVisitorInterface;
+use Twig\Operator\Operators;
 use Twig\Runtime\EscaperRuntime;
 use Twig\RuntimeLoader\FactoryRuntimeLoader;
 use Twig\RuntimeLoader\RuntimeLoaderInterface;
@@ -925,22 +924,10 @@ class Environment
 
     /**
      * @internal
-     *
-     * @return array<string, array{precedence: int, precedence_change?: OperatorPrecedenceChange, class: class-string<AbstractUnary>}>
      */
-    public function getUnaryOperators(): array
+    public function getOperators(): Operators
     {
-        return $this->extensionSet->getUnaryOperators();
-    }
-
-    /**
-     * @internal
-     *
-     * @return array<string, array{precedence: int, precedence_change?: OperatorPrecedenceChange, class: class-string<AbstractBinary>, associativity: ExpressionParser::OPERATOR_*}>
-     */
-    public function getBinaryOperators(): array
-    {
-        return $this->extensionSet->getBinaryOperators();
+        return $this->extensionSet->getOperators();
     }
 
     private function updateOptionsHash(): void

@@ -418,3 +418,26 @@ Operators
     {# or #}
 
     {{ (not 1) * 2 }} {# this is equivalent to what Twig 4.x will do without the parentheses #}
+
+* Operators are now instances of ``Twig\Operator\OperatorInterface`` instead of
+  arrays. The ``ExtensionInterface::getOperators()`` method should now return an
+  array of ``Twig\Operator\OperatorInterface`` instances.
+
+    Before:
+
+      public function getOperators(): array {
+          return [
+              'not' => [
+                  'precedence' => 10,
+                  'class' => NotUnaryOperator::class,
+              ],
+          ];
+      }
+
+    After:
+
+      public function getOperators(): array {
+          return [
+              new NotUnaryOperator(),
+          ];
+      }
