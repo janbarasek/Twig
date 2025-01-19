@@ -408,7 +408,7 @@ class ExpressionParserTest extends TestCase
     public function testCompiledCodeForDynamicTest()
     {
         $env = new Environment(new ArrayLoader(['index' => '{{ "a" is foo_foo_bar_bar }}']), ['cache' => false, 'autoescape' => false]);
-        $env->addExtension(new class() extends AbstractExtension {
+        $env->addExtension(new class extends AbstractExtension {
             public function getTests()
             {
                 return [
@@ -423,7 +423,7 @@ class ExpressionParserTest extends TestCase
     public function testCompiledCodeForDynamicFunction()
     {
         $env = new Environment(new ArrayLoader(['index' => '{{ foo_foo_bar_bar("a") }}']), ['cache' => false, 'autoescape' => false]);
-        $env->addExtension(new class() extends AbstractExtension {
+        $env->addExtension(new class extends AbstractExtension {
             public function getFunctions()
             {
                 return [
@@ -438,7 +438,7 @@ class ExpressionParserTest extends TestCase
     public function testCompiledCodeForDynamicFilter()
     {
         $env = new Environment(new ArrayLoader(['index' => '{{ "a"|foo_foo_bar_bar }}']), ['cache' => false, 'autoescape' => false]);
-        $env->addExtension(new class() extends AbstractExtension {
+        $env->addExtension(new class extends AbstractExtension {
             public function getFilters()
             {
                 return [
@@ -569,10 +569,10 @@ class ExpressionParserTest extends TestCase
     public function testUnaryPrecedenceChange()
     {
         $env = new Environment(new ArrayLoader(), ['cache' => false, 'autoescape' => false]);
-        $env->addExtension(new class () extends AbstractExtension {
+        $env->addExtension(new class extends AbstractExtension {
             public function getOperators()
             {
-                $class = new class (new ConstantExpression('foo', 1), 1) extends AbstractUnary {
+                $class = new class(new ConstantExpression('foo', 1), 1) extends AbstractUnary {
                     public function operator(Compiler $compiler): Compiler
                     {
                         return $compiler->raw('!');

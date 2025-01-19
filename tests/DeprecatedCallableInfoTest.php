@@ -30,7 +30,7 @@ class DeprecatedCallableInfoTest extends TestCase
                 if (\E_USER_DEPRECATED === $type) {
                     $deprecations[] = $msg;
                 }
-    
+
                 return false;
             });
 
@@ -62,7 +62,7 @@ class DeprecatedCallableInfoTest extends TestCase
                 if (\E_USER_DEPRECATED === $type) {
                     $deprecations[] = $msg;
                 }
-    
+
                 return false;
             });
 
