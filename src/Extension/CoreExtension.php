@@ -917,7 +917,7 @@ final class CoreExtension extends AbstractExtension
     }
 
     /**
-     * Invokes a callable
+     * Invokes a callable.
      *
      * @internal
      */
