@@ -25,7 +25,7 @@ class NotInBinaryOperator extends AbstractBinaryOperator
         return 20;
     }
 
-    public function getNodeClass(): ?string
+    protected function getNodeClass(): string
     {
         return NotInBinary::class;
     }

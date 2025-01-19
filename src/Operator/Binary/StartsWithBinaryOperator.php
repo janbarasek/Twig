@@ -25,7 +25,7 @@ class StartsWithBinaryOperator extends AbstractBinaryOperator
         return 20;
     }
 
-    public function getNodeClass(): ?string
+    protected function getNodeClass(): string
     {
         return StartsWithBinary::class;
     }

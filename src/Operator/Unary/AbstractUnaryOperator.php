@@ -11,13 +11,26 @@
 
 namespace Twig\Operator\Unary;
 
+use Twig\ExpressionParser;
+use Twig\Node\Expression\AbstractExpression;
 use Twig\Operator\AbstractOperator;
 use Twig\Operator\OperatorArity;
+use Twig\Token;
 
-abstract class AbstractUnaryOperator extends AbstractOperator
+abstract class AbstractUnaryOperator extends AbstractOperator implements UnaryOperatorInterface
 {
+    public function parse(ExpressionParser $parser, Token $token): AbstractExpression
+    {
+        return new ($this->getNodeClass())($parser->parseExpression($this->getPrecedence()), $token->getLine());
+    }
+
     public function getArity(): OperatorArity
     {
         return OperatorArity::Unary;
     }
+
+    /**
+     * @return class-string<AbstractExpression>
+     */
+    abstract protected function getNodeClass(): string;
 }

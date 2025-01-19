@@ -36,6 +36,8 @@ class Lexer
     private $position;
     private $positions;
     private $currentVarBlockLine;
+    private array $openingBrackets = ['{', '(', '['];
+    private array $closingBrackets = ['}', ')', ']'];
 
     public const STATE_DATA = 0;
     public const STATE_BLOCK = 1;
@@ -337,14 +339,18 @@ class Lexer
             $this->pushToken(Token::SPREAD_TYPE, '...');
             $this->moveCursor('...');
         }
-        // arrow function
-        elseif ('=' === $this->code[$this->cursor] && ($this->cursor + 1 < $this->end) && '>' === $this->code[$this->cursor + 1]) {
-            $this->pushToken(Token::ARROW_TYPE, '=>');
-            $this->moveCursor('=>');
-        }
         // operators
         elseif (preg_match($this->regexes['operator'], $this->code, $match, 0, $this->cursor)) {
-            $this->pushToken(Token::OPERATOR_TYPE, preg_replace('/\s+/', ' ', $match[0]));
+            $operator = preg_replace('/\s+/', ' ', $match[0]);
+            $type = Token::OPERATOR_TYPE;
+            // to be removed in 4.0
+            if (str_contains(self::PUNCTUATION, $operator)) {
+                $type = Token::PUNCTUATION_TYPE;
+            }
+            if (in_array($operator, $this->openingBrackets)) {
+                $this->checkBrackets($operator);
+            }
+            $this->pushToken($type, $operator);
             $this->moveCursor($match[0]);
         }
         // names
@@ -359,22 +365,7 @@ class Lexer
         }
         // punctuation
         elseif (str_contains(self::PUNCTUATION, $this->code[$this->cursor])) {
-            // opening bracket
-            if (str_contains('([{', $this->code[$this->cursor])) {
-                $this->brackets[] = [$this->code[$this->cursor], $this->lineno];
-            }
-            // closing bracket
-            elseif (str_contains(')]}', $this->code[$this->cursor])) {
-                if (!$this->brackets) {
-                    throw new SyntaxError(\sprintf('Unexpected "%s".', $this->code[$this->cursor]), $this->lineno, $this->source);
-                }
-
-                [$expect, $lineno] = array_pop($this->brackets);
-                if ($this->code[$this->cursor] != strtr($expect, '([{', ')]}')) {
-                    throw new SyntaxError(\sprintf('Unclosed "%s".', $expect), $lineno, $this->source);
-                }
-            }
-
+            $this->checkBrackets($this->code[$this->cursor]);
             $this->pushToken(Token::PUNCTUATION_TYPE, $this->code[$this->cursor]);
             ++$this->cursor;
         }
@@ -588,5 +579,23 @@ class Lexer
         }
 
         $this->state = array_pop($this->states);
+    }
+
+    private function checkBrackets(string $code): void
+    {
+        // opening bracket
+        if (in_array($code, $this->openingBrackets)) {
+            $this->brackets[] = [$code, $this->lineno];
+        } elseif (in_array($code, $this->closingBrackets)) {
+            // closing bracket
+            if (!$this->brackets) {
+                throw new SyntaxError(\sprintf('Unexpected "%s".', $code), $this->lineno, $this->source);
+            }
+
+            [$expect, $lineno] = array_pop($this->brackets);
+            if ($code !== str_replace($this->openingBrackets, $this->closingBrackets, $expect)) {
+                throw new SyntaxError(\sprintf('Unclosed "%s".', $expect), $lineno, $this->source);
+            }
+        }
     }
 }

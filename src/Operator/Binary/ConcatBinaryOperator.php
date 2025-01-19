@@ -31,7 +31,7 @@ class ConcatBinaryOperator extends AbstractBinaryOperator
         return new OperatorPrecedenceChange('twig/twig', '3.15', 27);
     }
 
-    public function getNodeClass(): ?string
+    protected function getNodeClass(): string
     {
         return ConcatBinary::class;
     }

@@ -16,12 +16,15 @@ use Twig\Extension\ExtensionInterface;
 use Twig\Extension\GlobalsInterface;
 use Twig\Extension\LastModifiedExtensionInterface;
 use Twig\Extension\StagingExtension;
+use Twig\Node\Expression\AbstractExpression;
 use Twig\NodeVisitor\NodeVisitorInterface;
 use Twig\Operator\Binary\AbstractBinaryOperator;
+use Twig\Operator\Binary\BinaryOperatorInterface;
 use Twig\Operator\OperatorAssociativity;
 use Twig\Operator\OperatorInterface;
 use Twig\Operator\Operators;
 use Twig\Operator\Unary\AbstractUnaryOperator;
+use Twig\Operator\Unary\UnaryOperatorInterface;
 use Twig\TokenParser\TokenParserInterface;
 
 /**
@@ -497,7 +500,7 @@ final class ExtensionSet
                     throw new \InvalidArgumentException(\sprintf('"%s::getOperators()" must return an array of 2 elements, got %d.', \get_class($extension), \count($operators)));
                 }
 
-                trigger_deprecation('twig/twig', '3.19.0', \sprintf('Extension "%s" uses the old signature for "getOperators()", please update it to return an array of "OperatorInterface" objects.', \get_class($extension)));
+                trigger_deprecation('twig/twig', '3.20', \sprintf('Extension "%s" uses the old signature for "getOperators()", please update it to return an array of "OperatorInterface" objects.', \get_class($extension)));
 
                 $ops = [];
                 foreach ($operators[0] as $n => $op) {
@@ -515,9 +518,9 @@ final class ExtensionSet
 
     private function convertUnaryOperators(string $n, array $op): OperatorInterface
     {
-        trigger_deprecation('twig/twig', '3.19.0', \sprintf('Using a non-OperatorInterface object to define the "%s" unary operator is deprecated.', $n));
+        trigger_deprecation('twig/twig', '3.20', \sprintf('Using a non-OperatorInterface object to define the "%s" unary operator is deprecated.', $n));
 
-        return new class($op, $n) extends AbstractUnaryOperator {
+        return new class($op, $n) extends AbstractUnaryOperator implements UnaryOperatorInterface {
             public function __construct(private array $op, private string $operator)
             {
             }
@@ -537,18 +540,18 @@ final class ExtensionSet
                 return $this->op['precedence_change'] ?? null;
             }
 
-            public function getNodeClass(): ?string
+            protected function getNodeClass(): string
             {
-                return $this->op['class'] ?? null;
+                return $this->op['class'] ?? '';
             }
         };
     }
 
     private function convertBinaryOperators(string $n, array $op): OperatorInterface
     {
-        trigger_deprecation('twig/twig', '3.19.0', \sprintf('Using a non-OperatorInterface object to define the "%s" binary operator is deprecated.', $n));
+        trigger_deprecation('twig/twig', '3.20', \sprintf('Using a non-OperatorInterface object to define the "%s" binary operator is deprecated.', $n));
 
-        return new class($op, $n) extends AbstractBinaryOperator {
+        return new class($op, $n) extends AbstractBinaryOperator implements BinaryOperatorInterface {
             public function __construct(private array $op, private string $operator)
             {
             }
@@ -568,9 +571,9 @@ final class ExtensionSet
                 return $this->op['precedence_change'] ?? null;
             }
 
-            public function getNodeClass(): ?string
+            protected function getNodeClass(): string
             {
-                return $this->op['class'] ?? null;
+                return $this->op['class'] ?? '';
             }
 
             public function getAssociativity(): OperatorAssociativity
@@ -582,9 +585,13 @@ final class ExtensionSet
                 };
             }
 
-            public function getCallable(): ?callable
+            public function parse(ExpressionParser $parser, AbstractExpression $expr, Token $token): AbstractExpression
             {
-                return $this->op['callable'] ?? null;
+                if ($this->op['callable']) {
+                    return $this->op['callable']($parser, $expr);
+                }
+
+                return parent::parse($parser, $expr, $token);
             }
         };
     }

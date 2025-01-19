@@ -25,7 +25,7 @@ class BitwiseAndBinaryOperator extends AbstractBinaryOperator
         return 18;
     }
 
-    public function getNodeClass(): ?string
+    protected function getNodeClass(): string
     {
         return BitwiseAndBinary::class;
     }

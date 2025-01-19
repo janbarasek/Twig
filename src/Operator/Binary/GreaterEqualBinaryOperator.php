@@ -15,7 +15,7 @@ use Twig\Node\Expression\Binary\GreaterEqualBinary;
 
 class GreaterEqualBinaryOperator extends AbstractBinaryOperator
 {
-    public function getNodeClass(): ?string
+    protected function getNodeClass(): string
     {
         return GreaterEqualBinary::class;
     }

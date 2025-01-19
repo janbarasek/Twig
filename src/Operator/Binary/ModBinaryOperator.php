@@ -25,7 +25,7 @@ class ModBinaryOperator extends AbstractBinaryOperator
         return 60;
     }
 
-    public function getNodeClass(): ?string
+    protected function getNodeClass(): string
     {
         return ModBinary::class;
     }

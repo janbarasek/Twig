@@ -34,15 +34,19 @@ use Twig\Node\Expression\Test\SameasTest;
 use Twig\Node\Node;
 use Twig\Operator\Binary\AddBinaryOperator;
 use Twig\Operator\Binary\AndBinaryOperator;
+use Twig\Operator\Binary\ArrowBinaryOperator;
 use Twig\Operator\Binary\BitwiseAndBinaryOperator;
 use Twig\Operator\Binary\BitwiseOrBinaryOperator;
 use Twig\Operator\Binary\BitwiseXorBinaryOperator;
 use Twig\Operator\Binary\ConcatBinaryOperator;
 use Twig\Operator\Binary\DivBinaryOperator;
+use Twig\Operator\Binary\DotBinaryOperator;
 use Twig\Operator\Binary\ElvisBinaryOperator;
 use Twig\Operator\Binary\EndsWithBinaryOperator;
 use Twig\Operator\Binary\EqualBinaryOperator;
+use Twig\Operator\Binary\FilterBinaryOperator;
 use Twig\Operator\Binary\FloorDivBinaryOperator;
+use Twig\Operator\Binary\FunctionBinaryOperator;
 use Twig\Operator\Binary\GreaterBinaryOperator;
 use Twig\Operator\Binary\GreaterEqualBinaryOperator;
 use Twig\Operator\Binary\HasEveryBinaryOperator;
@@ -62,11 +66,14 @@ use Twig\Operator\Binary\OrBinaryOperator;
 use Twig\Operator\Binary\PowerBinaryOperator;
 use Twig\Operator\Binary\RangeBinaryOperator;
 use Twig\Operator\Binary\SpaceshipBinaryOperator;
+use Twig\Operator\Binary\SquareBracketBinaryOperator;
 use Twig\Operator\Binary\StartsWithBinaryOperator;
 use Twig\Operator\Binary\SubBinaryOperator;
 use Twig\Operator\Binary\XorBinaryOperator;
+use Twig\Operator\Ternary\ConditionalTernaryOperator;
 use Twig\Operator\Unary\NegUnaryOperator;
 use Twig\Operator\Unary\NotUnaryOperator;
+use Twig\Operator\Unary\ParenthesisUnaryOperator;
 use Twig\Operator\Unary\PosUnaryOperator;
 use Twig\Parser;
 use Twig\Sandbox\SecurityNotAllowedMethodError;
@@ -319,6 +326,7 @@ final class CoreExtension extends AbstractExtension
             new NotUnaryOperator(),
             new NegUnaryOperator(),
             new PosUnaryOperator(),
+            new ParenthesisUnaryOperator(),
 
             new ElvisBinaryOperator(),
             new NullCoalesceBinaryOperator(),
@@ -353,6 +361,13 @@ final class CoreExtension extends AbstractExtension
             new IsBinaryOperator(),
             new IsNotBinaryOperator(),
             new PowerBinaryOperator(),
+            new FilterBinaryOperator(),
+            new DotBinaryOperator(),
+            new SquareBracketBinaryOperator(),
+            new FunctionBinaryOperator(),
+            new ArrowBinaryOperator(),
+
+            new ConditionalTernaryOperator(),
         ];
     }
 

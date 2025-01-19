@@ -25,7 +25,7 @@ class HasEveryBinaryOperator extends AbstractBinaryOperator
         return 20;
     }
 
-    public function getNodeClass(): ?string
+    protected function getNodeClass(): string
     {
         return HasEveryBinary::class;
     }

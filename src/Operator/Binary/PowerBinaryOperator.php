@@ -26,7 +26,7 @@ class PowerBinaryOperator extends AbstractBinaryOperator
         return 200;
     }
 
-    public function getNodeClass(): ?string
+    protected function getNodeClass(): string
     {
         return PowerBinary::class;
     }

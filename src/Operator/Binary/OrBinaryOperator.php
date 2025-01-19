@@ -20,7 +20,7 @@ class OrBinaryOperator extends AbstractBinaryOperator
         return 'or';
     }
 
-    public function getNodeClass(): ?string
+    protected function getNodeClass(): string
     {
         return OrBinary::class;
     }

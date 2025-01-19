@@ -25,7 +25,7 @@ class BitwiseXorBinaryOperator extends AbstractBinaryOperator
         return 17;
     }
 
-    public function getNodeClass(): ?string
+    protected function getNodeClass(): string
     {
         return BitwiseXorBinary::class;
     }

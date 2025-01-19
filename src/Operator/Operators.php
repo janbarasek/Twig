@@ -11,15 +11,33 @@
 
 namespace Twig\Operator;
 
-use Twig\Operator\Binary\AbstractBinaryOperator;
-use Twig\Operator\Unary\AbstractUnaryOperator;
+use Twig\Operator\Binary\BinaryOperatorInterface;
+use Twig\Operator\Ternary\TernaryOperatorInterface;
+use Twig\Operator\Unary\UnaryOperatorInterface;
 
-class Operators implements \IteratorAggregate
+/**
+ * @template-implements \IteratorAggregate<OperatorInterface>
+ */
+final class Operators implements \IteratorAggregate
 {
+    /**
+     * @var array<value-of<OperatorArity>, array<string, OperatorInterface>>
+     */
     private array $operators = [];
+
+    /**
+     * @var array<value-of<OperatorArity>, array<string, OperatorInterface>>
+     */
     private array $aliases = [];
+
+    /**
+     * @var \WeakMap<OperatorInterface, array<OperatorInterface>>|null
+     */
     private ?\WeakMap $precedenceChanges = null;
 
+    /**
+     * @param array<OperatorInterface> $operators
+     */
     public function __construct(
         array $operators = [],
     ) {
@@ -27,7 +45,7 @@ class Operators implements \IteratorAggregate
     }
 
     /**
-     * @param array<AbstractOperator> $operators
+     * @param array<OperatorInterface> $operators
      *
      * @return $this
      */
@@ -44,14 +62,19 @@ class Operators implements \IteratorAggregate
         return $this;
     }
 
-    public function getUnary(string $name): ?AbstractUnaryOperator
+    public function getUnary(string $name): ?UnaryOperatorInterface
     {
         return $this->operators[OperatorArity::Unary->value][$name] ?? ($this->aliases[OperatorArity::Unary->value][$name] ?? null);
     }
 
-    public function getBinary(string $name): ?AbstractBinaryOperator
+    public function getBinary(string $name): ?BinaryOperatorInterface
     {
         return $this->operators[OperatorArity::Binary->value][$name] ?? ($this->aliases[OperatorArity::Binary->value][$name] ?? null);
+    }
+
+    public function getTernary(string $name): ?TernaryOperatorInterface
+    {
+        return $this->operators[OperatorArity::Ternary->value][$name] ?? ($this->aliases[OperatorArity::Ternary->value][$name] ?? null);
     }
 
     public function getIterator(): \Traversable
@@ -65,7 +88,7 @@ class Operators implements \IteratorAggregate
     /**
      * @internal
      *
-     * @return \WeakMap<AbstractOperator, array<AbstractOperator>>
+     * @return \WeakMap<OperatorInterface, array<OperatorInterface>>
      */
     public function getPrecedenceChanges(): \WeakMap
     {

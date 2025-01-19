@@ -32,7 +32,7 @@ class NullCoalesceBinaryOperator extends AbstractBinaryOperator
         return new OperatorPrecedenceChange('twig/twig', '3.15', 5);
     }
 
-    public function getNodeClass(): ?string
+    protected function getNodeClass(): string
     {
         return NullCoalesceBinary::class;
     }

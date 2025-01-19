@@ -25,7 +25,7 @@ class PosUnaryOperator extends AbstractUnaryOperator
         return 500;
     }
 
-    public function getNodeClass(): ?string
+    protected function getNodeClass(): string
     {
         return PosUnary::class;
     }

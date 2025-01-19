@@ -11,17 +11,13 @@
 
 namespace Twig\Operator;
 
-use Twig\Node\Expression\AbstractExpression;
 use Twig\OperatorPrecedenceChange;
 
 interface OperatorInterface
 {
-    public function getOperator(): string;
+    public function __toString(): string;
 
-    /**
-     * @return class-string<AbstractExpression>
-     */
-    public function getNodeClass(): ?string;
+    public function getOperator(): string;
 
     public function getArity(): OperatorArity;
 

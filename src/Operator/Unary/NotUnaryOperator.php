@@ -31,7 +31,7 @@ class NotUnaryOperator extends AbstractUnaryOperator
         return new OperatorPrecedenceChange('twig/twig', '3.15', 70);
     }
 
-    public function getNodeClass(): ?string
+    protected function getNodeClass(): string
     {
         return NotUnary::class;
     }

@@ -63,7 +63,12 @@ interface ExtensionInterface
     /**
      * Returns a list of operators to add to the existing list.
      *
-     * @return OperatorInterface[]
+     * @return OperatorInterface[]|array<array>
+     *
+     * @psalm-return OperatorInterface[]|array{
+     *     array<string, array{precedence: int, precedence_change?: OperatorPrecedenceChange, class: class-string<AbstractUnary>}>,
+     *     array<string, array{precedence: int, precedence_change?: OperatorPrecedenceChange, class?: class-string<AbstractBinary>, associativity: ExpressionParser::OPERATOR_*}>
+     * }
      */
     public function getOperators();
 }

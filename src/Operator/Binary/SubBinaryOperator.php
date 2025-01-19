@@ -25,7 +25,7 @@ class SubBinaryOperator extends AbstractBinaryOperator
         return 30;
     }
 
-    public function getNodeClass(): ?string
+    protected function getNodeClass(): string
     {
         return SubBinary::class;
     }

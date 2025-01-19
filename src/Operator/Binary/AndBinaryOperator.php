@@ -25,7 +25,7 @@ class AndBinaryOperator extends AbstractBinaryOperator
         return 15;
     }
 
-    public function getNodeClass(): ?string
+    protected function getNodeClass(): string
     {
         return AndBinary::class;
     }

@@ -25,7 +25,7 @@ class XorBinaryOperator extends AbstractBinaryOperator
         return 12;
     }
 
-    public function getNodeClass(): ?string
+    protected function getNodeClass(): string
     {
         return XorBinary::class;
     }

@@ -11,16 +11,16 @@
 
 namespace Twig\Operator\Binary;
 
-class IsNotBinaryOperator extends AbstractBinaryOperator
-{
-    public function getPrecedence(): int
-    {
-        return 100;
-    }
+use Twig\ExpressionParser;
+use Twig\Node\Expression\AbstractExpression;
+use Twig\Node\Expression\Unary\NotUnary;
+use Twig\Token;
 
-    public function getNodeClass(): ?string
+class IsNotBinaryOperator extends IsBinaryOperator
+{
+    public function parse(ExpressionParser $parser, AbstractExpression $expr, Token $token): AbstractExpression
     {
-        return null;
+        return new NotUnary(parent::parse($parser, $expr, $token), $token->getLine());
     }
 
     public function getOperator(): string

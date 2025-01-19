@@ -13,11 +13,17 @@ namespace Twig\Operator\Ternary;
 
 use Twig\Operator\AbstractOperator;
 use Twig\Operator\OperatorArity;
+use Twig\Operator\OperatorAssociativity;
 
-abstract class AbstractTernaryOperator extends AbstractOperator
+abstract class AbstractTernaryOperator extends AbstractOperator implements TernaryOperatorInterface
 {
     public function getArity(): OperatorArity
     {
         return OperatorArity::Ternary;
+    }
+
+    public function getAssociativity(): OperatorAssociativity
+    {
+        return OperatorAssociativity::Left;
     }
 }

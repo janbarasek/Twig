@@ -13,18 +13,28 @@ namespace Twig\Operator\Binary;
 
 use Twig\ExpressionParser;
 use Twig\Node\Expression\AbstractExpression;
+use Twig\Node\Expression\ArrowFunctionExpression;
 use Twig\Operator\AbstractOperator;
 use Twig\Operator\OperatorArity;
 use Twig\Operator\OperatorAssociativity;
 use Twig\Token;
 
-abstract class AbstractBinaryOperator extends AbstractOperator implements BinaryOperatorInterface
+class ArrowBinaryOperator extends AbstractOperator implements BinaryOperatorInterface
 {
-    public function parse(ExpressionParser $parser, AbstractExpression $left, Token $token): AbstractExpression
+    public function parse(ExpressionParser $parser, AbstractExpression $expr, Token $token): AbstractExpression
     {
-        $right = $parser->parseExpression(OperatorAssociativity::Left === $this->getAssociativity() ? $this->getPrecedence() + 1 : $this->getPrecedence());
+        // As the expression of the arrow function is independent from the current precedence, we want a precedence of 0
+        return new ArrowFunctionExpression($parser->parseExpression(), $expr, $token->getLine());
+    }
 
-        return new ($this->getNodeClass())($left, $right, $token->getLine());
+    public function getOperator(): string
+    {
+        return '=>';
+    }
+
+    public function getPrecedence(): int
+    {
+        return 250;
     }
 
     public function getArity(): OperatorArity
@@ -36,9 +46,4 @@ abstract class AbstractBinaryOperator extends AbstractOperator implements Binary
     {
         return OperatorAssociativity::Left;
     }
-
-    /**
-     * @return class-string<AbstractExpression>
-     */
-    abstract protected function getNodeClass(): string;
 }

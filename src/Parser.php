@@ -380,6 +380,98 @@ class Parser
         return $this->stream->getCurrent();
     }
 
+    public function getFunction(string $name, int $line): TwigFunction
+    {
+        try {
+            $function = $this->env->getFunction($name);
+        } catch (SyntaxError $e) {
+            if (!$this->shouldIgnoreUnknownTwigCallables()) {
+                throw $e;
+            }
+
+            $function = null;
+        }
+
+        if (!$function) {
+            if ($this->shouldIgnoreUnknownTwigCallables()) {
+                return new TwigFunction($name, fn () => '');
+            }
+            $e = new SyntaxError(\sprintf('Unknown "%s" function.', $name), $line, $this->stream->getSourceContext());
+            $e->addSuggestions($name, array_keys($this->env->getFunctions()));
+
+            throw $e;
+        }
+
+        if ($function->isDeprecated()) {
+            $src = $this->stream->getSourceContext();
+            $function->triggerDeprecation($src->getPath() ?: $src->getName(), $line);
+        }
+
+        return $function;
+    }
+
+    public function getFilter(string $name, int $line): TwigFilter
+    {
+        try {
+            $filter = $this->env->getFilter($name);
+        } catch (SyntaxError $e) {
+            if (!$this->shouldIgnoreUnknownTwigCallables()) {
+                throw $e;
+            }
+
+            $filter = null;
+        }
+        if (!$filter) {
+            if ($this->shouldIgnoreUnknownTwigCallables()) {
+                return new TwigFilter($name, fn () => '');
+            }
+            $e = new SyntaxError(\sprintf('Unknown "%s" filter.', $name), $line, $this->stream->getSourceContext());
+            $e->addSuggestions($name, array_keys($this->env->getFilters()));
+
+            throw $e;
+        }
+
+        if ($filter->isDeprecated()) {
+            $src = $this->stream->getSourceContext();
+            $filter->triggerDeprecation($src->getPath() ?: $src->getName(), $line);
+        }
+
+        return $filter;
+    }
+
+    public function getTest(int $line): TwigTest
+    {
+        $name = $this->stream->expect(Token::NAME_TYPE)->getValue();
+
+        if ($this->stream->test(Token::NAME_TYPE)) {
+            // try 2-words tests
+            $name = $name.' '.$this->getCurrentToken()->getValue();
+
+            if ($test = $this->env->getTest($name)) {
+                $this->stream->next();
+            }
+        } else {
+            $test = $this->env->getTest($name);
+        }
+
+        if (!$test) {
+            if ($this->shouldIgnoreUnknownTwigCallables()) {
+                return new TwigTest($name, fn () => '');
+            }
+            $e = new SyntaxError(\sprintf('Unknown "%s" test.', $name), $line, $this->stream->getSourceContext());
+            $e->addSuggestions($name, array_keys($this->env->getTests()));
+
+            throw $e;
+        }
+
+        if ($test->isDeprecated()) {
+            $src = $this->stream->getSourceContext();
+            $test->triggerDeprecation($src->getPath() ?: $src->getName(), $this->stream->getCurrent()->getLine());
+        }
+
+        return $test;
+    }
+
     private function filterBodyNodes(Node $node, bool $nested = false): ?Node
     {
         // check that the body does not contain non-empty output nodes

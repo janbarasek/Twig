@@ -25,7 +25,7 @@ class RangeBinaryOperator extends AbstractBinaryOperator
         return 25;
     }
 
-    public function getNodeClass(): ?string
+    protected function getNodeClass(): string
     {
         return RangeBinary::class;
     }

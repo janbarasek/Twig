@@ -26,7 +26,7 @@ class ElvisBinaryOperator extends AbstractBinaryOperator
         return ['? :'];
     }
 
-    public function getNodeClass(): ?string
+    protected function getNodeClass(): string
     {
         return ElvisBinary::class;
     }
