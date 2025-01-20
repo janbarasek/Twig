@@ -1,5 +1,7 @@
 # 3.19.0 (2025-XX-XX)
 
+ * Deprecate `Token::getType()`, use `Token::test()` instead
+ * Add `Token::toEnglish()`
  * Add `ForElseNode`
  * Deprecate `Twig\ExpressionParser::parseOnlyArguments()` and
   `Twig\ExpressionParser::parseArguments()` (use
