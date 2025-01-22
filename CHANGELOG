@@ -4,6 +4,7 @@
  * Add the `invoke` filter
  * Make `{}` optional for the `types` tag
  * Add `LastModifiedExtensionInterface` and implementation in `AbstractExtension` to track modification of runtime classes
+ * Ignore static properties when using the dot operator
 
 # 3.18.0 (2024-12-29)
 

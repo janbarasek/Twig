@@ -2151,7 +2151,7 @@ final class CoreExtension extends AbstractExtension
 
         $property = $class->getProperty($property);
 
-        if (!$property->isPublic()) {
+        if (!$property->isPublic() || $property->isStatic()) {
             static $false;
 
             return $false ??= static fn () => false;
