@@ -1,5 +1,9 @@
 # 3.19.0 (2025-XX-XX)
 
+ * Deprecate `Twig\ExpressionParser::parseOnlyArguments()` and
+  `Twig\ExpressionParser::parseArguments()` (use
+  `Twig\ExpressionParser::parseNamedArguments()` instead)
+
  * Fix `constant()` behavior when used with `??`
  * Add the `invoke` filter
  * Make `{}` optional for the `types` tag
