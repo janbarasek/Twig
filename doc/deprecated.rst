@@ -236,6 +236,9 @@ Lexer
 * Not passing a ``Source`` instance to ``Twig\TokenStream`` constructor is
   deprecated as of Twig 3.16.
 
+* The ``Token::getType()`` method is deprecated as of Twig 3.19, use
+  ``Token::test()`` instead.
+
 Templates
 ---------
 
