@@ -15,11 +15,11 @@ use Twig\Compiler;
 use Twig\Node\EmptyNode;
 use Twig\Node\Expression\AbstractExpression;
 use Twig\Node\Expression\BlockReferenceExpression;
-use Twig\Node\Expression\NameExpression;
 use Twig\Node\Expression\OperatorEscapeInterface;
 use Twig\Node\Expression\Test\DefinedTest;
 use Twig\Node\Expression\Test\NullTest;
 use Twig\Node\Expression\Unary\NotUnary;
+use Twig\Node\Expression\Variable\ContextVariable;
 use Twig\TwigTest;
 
 final class NullCoalesceBinary extends AbstractBinary implements OperatorEscapeInterface
@@ -28,7 +28,7 @@ final class NullCoalesceBinary extends AbstractBinary implements OperatorEscapeI
     {
         parent::__construct($left, $right, $lineno);
 
-        if (!$left instanceof NameExpression) {
+        if (!$left instanceof ContextVariable) {
             $test = new DefinedTest(clone $left, new TwigTest('defined'), new EmptyNode(), $left->getTemplateLine());
             // for "block()", we don't need the null test as the return value is always a string
             if (!$left instanceof BlockReferenceExpression) {

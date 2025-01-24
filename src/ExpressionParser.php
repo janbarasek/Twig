@@ -655,7 +655,7 @@ class ExpressionParser
 
             $name = null;
             if ($namedArguments && (($token = $stream->nextIf(Token::OPERATOR_TYPE, '=')) || (!$definition && $token = $stream->nextIf(Token::PUNCTUATION_TYPE, ':')))) {
-                if (!$value instanceof NameExpression) {
+                if (!$value instanceof ContextVariable) {
                     throw new SyntaxError(\sprintf('A parameter name must be a string, "%s" given.', \get_class($value)), $token->getLine(), $stream->getSourceContext());
                 }
                 $name = $value->getAttribute('name');
@@ -743,7 +743,7 @@ class ExpressionParser
             $arguments = new Nodes([0 => $this->getPrimary()]);
         }
 
-        if ('defined' === $test->getName() && $node instanceof NameExpression && null !== $alias = $this->parser->getImportedSymbol('function', $node->getAttribute('name'))) {
+        if ('defined' === $test->getName() && $node instanceof ContextVariable && null !== $alias = $this->parser->getImportedSymbol('function', $node->getAttribute('name'))) {
             $node = new MacroReferenceExpression($alias['node']->getNode('var'), $alias['name'], new ArrayExpression([], $node->getTemplateLine()), $node->getTemplateLine());
         }
 
@@ -898,7 +898,7 @@ class ExpressionParser
 
             $name = null;
             if (($token = $stream->nextIf(Token::OPERATOR_TYPE, '=')) || ($token = $stream->nextIf(Token::PUNCTUATION_TYPE, ':'))) {
-                if (!$value instanceof NameExpression) {
+                if (!$value instanceof ContextVariable) {
                     throw new SyntaxError(\sprintf('A parameter name must be a string, "%s" given.', \get_class($value)), $token->getLine(), $stream->getSourceContext());
                 }
                 $name = $value->getAttribute('name');
@@ -946,7 +946,7 @@ class ExpressionParser
         }
 
         if (
-            $node instanceof NameExpression
+            $node instanceof ContextVariable
             && (
                 null !== $this->parser->getImportedSymbol('template', $node->getAttribute('name'))
                 || '_self' === $node->getAttribute('name') && $attribute instanceof ConstantExpression

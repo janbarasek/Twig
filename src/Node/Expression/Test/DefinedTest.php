@@ -24,6 +24,7 @@ use Twig\Node\Expression\MacroReferenceExpression;
 use Twig\Node\Expression\MethodCallExpression;
 use Twig\Node\Expression\NameExpression;
 use Twig\Node\Expression\TestExpression;
+use Twig\Node\Expression\Variable\ContextVariable;
 use Twig\Node\Node;
 use Twig\TwigTest;
 
@@ -49,7 +50,7 @@ class DefinedTest extends TestExpression
             trigger_deprecation('twig/twig', '3.15', 'Not passing a "%s" instance to the "node" argument of "%s" is deprecated ("%s" given).', AbstractExpression::class, static::class, \get_class($node));
         }
 
-        if ($node instanceof NameExpression) {
+        if ($node instanceof ContextVariable) {
             $node->setAttribute('is_defined_test', true);
         } elseif ($node instanceof GetAttrExpression) {
             $node->setAttribute('is_defined_test', true);
