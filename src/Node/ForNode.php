@@ -31,6 +31,10 @@ class ForNode extends Node
     {
         $body = new Nodes([$body, $this->loop = new ForLoopNode($lineno)]);
 
+        if (null !== $ifexpr) {
+            trigger_deprecation('twig/twig', '3.19', \sprintf('Passing not-null to the "ifexpr" argument of the "%s" constructor is deprecated.', static::class));
+        }
+
         $nodes = ['key_target' => $keyTarget, 'value_target' => $valueTarget, 'seq' => $seq, 'body' => $body];
         if (null !== $else) {
             $nodes['else'] = $else;
