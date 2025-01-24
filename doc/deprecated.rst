@@ -56,9 +56,6 @@ Nodes
   as of Twig 3.12 as the tag is now automatically set by the Parser when
   needed.
 
-* Passing a second argument to "ExpressionParser::parseFilterExpressionRaw()"
-  is deprecated as of Twig 3.12.
-
 * The following ``Twig\Node\Node`` methods will take a string or an integer
   (instead of just a string) in Twig 4.0 for their "name" argument:
   ``getNode()``, ``hasNode()``, ``setNode()``, ``removeNode()``, and
@@ -213,6 +210,9 @@ Node Visitors
 Parser
 ------
 
+* Passing a second argument to ``ExpressionParser::parseFilterExpressionRaw()``
+  is deprecated as of Twig 3.12.
+
 * The following methods from ``Twig\Parser`` are deprecated as of Twig 3.12:
   ``getBlockStack()``, ``hasBlock()``, ``getBlock()``, ``hasMacro()``,
   ``hasTraits()``, ``getParent()``.
@@ -225,6 +225,10 @@ Parser
 
 * Passing ``null`` to ``Twig\Parser::setParent()`` is deprecated as of Twig
   3.12.
+
+* The ``Twig\ExpressionParser::parseOnlyArguments()`` and
+  ``Twig\ExpressionParser::parseArguments()`` methods are deprecated, use
+  ``Twig\ExpressionParser::parseNamedArguments()`` instead.
 
 Lexer
 -----

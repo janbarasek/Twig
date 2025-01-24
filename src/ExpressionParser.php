@@ -530,7 +530,7 @@ class ExpressionParser
             return new MacroReferenceExpression($alias['node']->getNode('var'), $alias['name'], $this->createArguments($line), $line);
         }
 
-        $args = $this->parseOnlyArguments();
+        $args = $this->parseNamedArguments();
         $function = $this->getFunction($name, $line);
 
         if ($function->getParserCallable()) {
@@ -579,7 +579,7 @@ class ExpressionParser
             if (!$this->parser->getStream()->test(Token::PUNCTUATION_TYPE, '(')) {
                 $arguments = new EmptyNode();
             } else {
-                $arguments = $this->parseOnlyArguments();
+                $arguments = $this->parseNamedArguments();
             }
 
             $filter = $this->getFilter($token->getValue(), $token->getLine());
@@ -611,9 +611,13 @@ class ExpressionParser
      * @return Node
      *
      * @throws SyntaxError
+     *
+     * @deprecated since Twig 3.19 Use parseNamedArguments() instead
      */
     public function parseArguments()
     {
+        trigger_deprecation('twig/twig', '3.19', \sprintf('The "%s()" method is deprecated, use "%s::parseNamedArguments()" instead.', __METHOD__, __CLASS__));
+
         $namedArguments = false;
         $definition = false;
         if (\func_num_args() > 1) {
@@ -738,7 +742,7 @@ class ExpressionParser
 
         $arguments = null;
         if ($stream->test(Token::PUNCTUATION_TYPE, '(')) {
-            $arguments = $this->parseOnlyArguments();
+            $arguments = $this->parseNamedArguments();
         } elseif ($test->hasOneMandatoryArgument()) {
             $arguments = new Nodes([0 => $this->getPrimary()]);
         }
@@ -864,14 +868,24 @@ class ExpressionParser
     private function createArguments(int $line): ArrayExpression
     {
         $arguments = new ArrayExpression([], $line);
-        foreach ($this->parseOnlyArguments() as $k => $n) {
+        foreach ($this->parseNamedArguments() as $k => $n) {
             $arguments->addElement($n, new LocalVariable($k, $line));
         }
 
         return $arguments;
     }
 
+    /**
+     * @deprecated since Twig 3.19 Use parseNamedArguments() instead
+     */
     public function parseOnlyArguments()
+    {
+        trigger_deprecation('twig/twig', '3.19', \sprintf('The "%s()" method is deprecated, use "%s::parseNamedArguments()" instead.', __METHOD__, __CLASS__));
+
+        return $this->parseNamedArguments();
+    }
+
+    public function parseNamedArguments(): Nodes
     {
         $args = [];
         $stream = $this->parser->getStream();
