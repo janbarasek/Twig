@@ -82,7 +82,7 @@ class Lexer
         ], $options);
     }
 
-    private function initialize()
+    private function initialize(): void
     {
         if ($this->isInitialized) {
             return;

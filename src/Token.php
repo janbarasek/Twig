@@ -40,7 +40,7 @@ final class Token
     ) {
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         return \sprintf('%s(%s)', self::typeToString($this->type, true), $this->value);
     }
@@ -80,6 +80,9 @@ final class Token
         return $this->type;
     }
 
+    /**
+     * @return mixed
+     */
     public function getValue()
     {
         return $this->value;
