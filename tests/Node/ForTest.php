@@ -13,6 +13,7 @@ namespace Twig\Tests\Node;
 
 use Twig\Node\Expression\Variable\AssignContextVariable;
 use Twig\Node\Expression\Variable\ContextVariable;
+use Twig\Node\ForElseNode;
 use Twig\Node\ForNode;
 use Twig\Node\Nodes;
 use Twig\Node\PrintNode;
@@ -36,7 +37,7 @@ class ForTest extends NodeTestCase
         $this->assertEquals($body, $node->getNode('body')->getNode('0'));
         $this->assertFalse($node->hasNode('else'));
 
-        $else = new PrintNode(new ContextVariable('foo', 1), 1);
+        $else = new ForElseNode(new PrintNode(new ContextVariable('foo', 1), 1), 5);
         $node = new ForNode($keyTarget, $valueTarget, $seq, null, $body, $else, 1);
         $node->setAttribute('with_loop', false);
         $this->assertEquals($else, $node->getNode('else'));
@@ -159,7 +160,7 @@ EOF
         $valueTarget = new AssignContextVariable('v', 1);
         $seq = new ContextVariable('values', 1);
         $body = new Nodes([new PrintNode(new ContextVariable('foo', 1), 1)], 1);
-        $else = new PrintNode(new ContextVariable('foo', 1), 1);
+        $else = new ForElseNode(new PrintNode(new ContextVariable('foo', 6), 6), 5);
         $node = new ForNode($keyTarget, $valueTarget, $seq, null, $body, $else, 1);
         $node->setAttribute('with_loop', true);
 
@@ -193,7 +194,9 @@ foreach (\$context['_seq'] as \$context["k"] => \$context["v"]) {
         \$context['loop']['last'] = 0 === \$context['loop']['revindex0'];
     }
 }
+// line 5
 if (!\$context['_iterated']) {
+    // line 6
     yield $fooGetter;
 }
 \$_parent = \$context['_parent'];
