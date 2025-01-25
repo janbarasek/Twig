@@ -42,7 +42,7 @@ final class Token
 
     public function __toString(): string
     {
-        return \sprintf('%s(%s)', $this->toEnglish(), $this->value);
+        return \sprintf('%s(%s)', self::typeToString($this->type, true), $this->value);
     }
 
     /**
