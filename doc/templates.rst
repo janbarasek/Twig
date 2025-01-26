@@ -1033,35 +1033,9 @@ Understanding the precedence of these operators is crucial for writing correct
 and efficient Twig templates.
 
 The operator precedence rules are as follows, with the lowest-precedence
-operators listed first:
+operators listed first.
 
-=============================  =================================== =====================================================
-Operator                       Score of precedence                 Description
-=============================  =================================== =====================================================
-``?:``                         0                                   Ternary operator, conditional statement
-``or``                         10                                  Logical OR operation between two boolean expressions
-``xor``                        12                                  Logical XOR operation between two boolean expressions
-``and``                        15                                  Logical AND operation between two boolean expressions
-``b-or``                       16                                  Bitwise OR operation on integers
-``b-xor``                      17                                  Bitwise XOR operation on integers
-``b-and``                      18                                  Bitwise AND operation on integers
-``==``, ``!=``, ``<=>``,       20                                  Comparison operators
-``<``, ``>``, ``>=``,
-``<=``, ``not in``, ``in``,
-``matches``, ``starts with``,
-``ends with``, ``has some``,
-``has every``
-``..``                         25                                  Range of values
-``+``, ``-``                   30                                  Addition and subtraction on numbers
-``~``                          40                                  String concatenation
-``not``                        50                                  Negates a statement
-``*``, ``/``, ``//``, ``%``    60                                  Arithmetic operations on numbers
-``is``, ``is not``             100                                 Tests
-``**``                         200                                 Raises a number to the power of another
-``??``                         300                                 Default value when a variable is null
-``+``, ``-``                   500                                 Unary operations on numbers
-``|``,``[]``,``.``             -                                   Filters, sequence, mapping, and attribute access
-=============================  =================================== =====================================================
+.. include:: operators_precedence.rst
 
 Without using any parentheses, the operator precedence rules are used to
 determine how to convert the code to PHP:
