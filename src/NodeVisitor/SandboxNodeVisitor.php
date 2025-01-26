@@ -21,7 +21,6 @@ use Twig\Node\Expression\Binary\RangeBinary;
 use Twig\Node\Expression\FilterExpression;
 use Twig\Node\Expression\FunctionExpression;
 use Twig\Node\Expression\GetAttrExpression;
-use Twig\Node\Expression\NameExpression;
 use Twig\Node\Expression\Unary\SpreadUnary;
 use Twig\Node\Expression\Variable\ContextVariable;
 use Twig\Node\ModuleNode;

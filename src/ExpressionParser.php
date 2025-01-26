@@ -23,7 +23,6 @@ use Twig\Node\Expression\Binary\ConcatBinary;
 use Twig\Node\Expression\ConstantExpression;
 use Twig\Node\Expression\GetAttrExpression;
 use Twig\Node\Expression\MacroReferenceExpression;
-use Twig\Node\Expression\NameExpression;
 use Twig\Node\Expression\Ternary\ConditionalTernary;
 use Twig\Node\Expression\TestExpression;
 use Twig\Node\Expression\Unary\AbstractUnary;
