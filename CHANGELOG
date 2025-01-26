@@ -1,6 +1,9 @@
 # 3.21.0 (2025-XX-XX)
 
- * Introduce operator classes to describe operators provided by extensions instead of arrays
+ * Introduce expression parser classes to describe operators and operands provided by extensions
+   instead of arrays (it comes with many deprecations that are documented in
+   the ``deprecated`` documentation chapter)
+ * Deprecate the `Twig\ExpressionParser`, and `Twig\OperatorPrecedenceChange` classes
 
 # 3.20.0 (2025-02-13)
 
