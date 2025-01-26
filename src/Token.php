@@ -80,7 +80,7 @@ final class Token
      */
     public function getType(): int
     {
-        trigger_deprecation('twig/twig', '3.19', sprintf('The "%s()" method is deprecated.', __METHOD__));
+        trigger_deprecation('twig/twig', '3.19', \sprintf('The "%s()" method is deprecated.', __METHOD__));
 
         return $this->type;
     }

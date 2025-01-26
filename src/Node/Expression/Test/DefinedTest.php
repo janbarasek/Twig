@@ -22,7 +22,6 @@ use Twig\Node\Expression\FunctionExpression;
 use Twig\Node\Expression\GetAttrExpression;
 use Twig\Node\Expression\MacroReferenceExpression;
 use Twig\Node\Expression\MethodCallExpression;
-use Twig\Node\Expression\NameExpression;
 use Twig\Node\Expression\TestExpression;
 use Twig\Node\Expression\Variable\ContextVariable;
 use Twig\Node\Node;

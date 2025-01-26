@@ -19,7 +19,6 @@ use Twig\Node\Expression\FunctionExpression;
 use Twig\Node\Expression\GetAttrExpression;
 use Twig\Node\Expression\MacroReferenceExpression;
 use Twig\Node\Expression\MethodCallExpression;
-use Twig\Node\Expression\NameExpression;
 use Twig\Node\Expression\OperatorEscapeInterface;
 use Twig\Node\Expression\ParentExpression;
 use Twig\Node\Expression\Variable\ContextVariable;

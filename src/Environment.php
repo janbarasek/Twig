@@ -693,7 +693,7 @@ class Environment
 
     /**
      * @param ExtensionInterface[] $extensions An array of extensions
-     *                                         
+     *
      * @return void
      */
     public function setExtensions(array $extensions)

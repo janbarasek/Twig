@@ -14,7 +14,6 @@ namespace Twig\Node;
 use Twig\Attribute\YieldReady;
 use Twig\Compiler;
 use Twig\Node\Expression\AbstractExpression;
-use Twig\Node\Expression\NameExpression;
 use Twig\Node\Expression\Variable\AssignTemplateVariable;
 use Twig\Node\Expression\Variable\ContextVariable;
 
