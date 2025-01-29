@@ -1,5 +1,6 @@
 # 3.19.0 (2025-XX-XX)
 
+ * Fix a security issue where escaping was missing when using `??`
  * Deprecate `Token::getType()`, use `Token::test()` instead
  * Add `Token::toEnglish()`
  * Add `ForElseNode`
