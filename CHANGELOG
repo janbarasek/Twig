@@ -1,3 +1,7 @@
+# 3.20.0 (2025-XX-XX)
+
+ * n/a
+
 # 3.19.0 (2025-01-28)
 
  * Fix a security issue where escaping was missing when using `??`
