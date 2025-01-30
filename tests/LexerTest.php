@@ -632,4 +632,25 @@ bar
             Some regular comment # this is an inline comment
         #}'];
     }
+
+    /**
+     * @dataProvider getTemplateForUnclosedBracketInExpression
+     */
+    public function testUnclosedBracketInExpression(string $template, string $bracket)
+    {
+        $lexer = new Lexer(new Environment(new ArrayLoader()));
+
+        $this->expectException(SyntaxError::class);
+        $this->expectExceptionMessage(\sprintf('Unclosed "%s" in "index" at line 1.', $bracket));
+
+        $lexer->tokenize(new Source($template, 'index'));
+    }
+
+    public static function getTemplateForUnclosedBracketInExpression()
+    {
+        yield ['{{ (1 + 3 }}', '('];
+        yield ['{{ obj["a" }}', '['];
+        yield ['{{ ({ a: 1) }}', '{'];
+        yield ['{{ (([1]) + 3 }}', '('];
+    }
 }
