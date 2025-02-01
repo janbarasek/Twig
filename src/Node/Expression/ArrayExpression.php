@@ -116,9 +116,8 @@ class ArrayExpression extends AbstractExpression
                         ->subcompile($pair['key'])
                         ->raw(' => ')
                     ;
-                } else {
-                    ++$nextIndex;
                 }
+                ++$nextIndex;
 
                 $compiler->subcompile($pair['value']);
             }
