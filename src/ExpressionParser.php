@@ -332,7 +332,7 @@ class ExpressionParser
                 break;
 
             case $token->test(Token::STRING_TYPE):
-            case $token->test(Token::INTERPOLATION_START_TYPE)  :
+            case $token->test(Token::INTERPOLATION_START_TYPE):
                 $node = $this->parseStringExpression();
                 break;
 
