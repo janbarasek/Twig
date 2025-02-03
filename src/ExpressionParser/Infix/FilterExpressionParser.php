@@ -13,8 +13,10 @@ namespace Twig\ExpressionParser\Infix;
 
 use Twig\Attribute\FirstClassTwigCallableReady;
 use Twig\ExpressionParser\AbstractExpressionParser;
+use Twig\ExpressionParser\ExpressionParserDescriptionInterface;
 use Twig\ExpressionParser\InfixAssociativity;
 use Twig\ExpressionParser\InfixExpressionParserInterface;
+use Twig\ExpressionParser\PrecedenceChange;
 use Twig\Node\EmptyNode;
 use Twig\Node\Expression\AbstractExpression;
 use Twig\Node\Expression\ConstantExpression;
@@ -24,7 +26,7 @@ use Twig\Token;
 /**
  * @internal
  */
-final class FilterExpressionParser extends AbstractExpressionParser implements InfixExpressionParserInterface
+final class FilterExpressionParser extends AbstractExpressionParser implements InfixExpressionParserInterface, ExpressionParserDescriptionInterface
 {
     use ArgumentsTrait;
 
@@ -61,9 +63,19 @@ final class FilterExpressionParser extends AbstractExpressionParser implements I
         return '|';
     }
 
+    public function getDescription(): string
+    {
+        return 'Twig filter call';
+    }
+
     public function getPrecedence(): int
     {
-        return 300;
+        return 512;
+    }
+
+    public function getPrecedenceChange(): ?PrecedenceChange
+    {
+        return new PrecedenceChange('twig/twig', '3.20', 300);
     }
 
     public function getAssociativity(): InfixAssociativity

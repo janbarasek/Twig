@@ -44,7 +44,6 @@ final class ExpressionParsers implements \IteratorAggregate
     public function __construct(
         array $parsers = [],
     ) {
-        $this->precedenceChanges = null;
         $this->add($parsers);
     }
 
@@ -55,12 +54,16 @@ final class ExpressionParsers implements \IteratorAggregate
      */
     public function add(array $parsers): self
     {
-        foreach ($parsers as $operator) {
-            $type = ExpressionParserType::getType($operator);
-            $this->parsers[$type->value][$operator->getName()] = $operator;
-            $this->parsersByClass[$type->value][get_class($operator)] = $operator;
-            foreach ($operator->getAliases() as $alias) {
-                $this->aliases[$type->value][$alias] = $operator;
+        foreach ($parsers as $parser) {
+            if ($parser->getPrecedence() > 512 || $parser->getPrecedence() < 0) {
+                trigger_deprecation('twig/twig', '3.20', 'Precedence for "%s" must be between 0 and 512, got %d.', $parser->getName(), $parser->getPrecedence());
+                // throw new \InvalidArgumentException(\sprintf('Precedence for "%s" must be between 0 and 512, got %d.', $parser->getName(), $parser->getPrecedence()));
+            }
+            $type = ExpressionParserType::getType($parser);
+            $this->parsers[$type->value][$parser->getName()] = $parser;
+            $this->parsersByClass[$type->value][get_class($parser)] = $parser;
+            foreach ($parser->getAliases() as $alias) {
+                $this->aliases[$type->value][$alias] = $parser;
             }
         }
 

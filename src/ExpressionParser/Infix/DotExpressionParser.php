@@ -13,6 +13,7 @@ namespace Twig\ExpressionParser\Infix;
 
 use Twig\Error\SyntaxError;
 use Twig\ExpressionParser\AbstractExpressionParser;
+use Twig\ExpressionParser\ExpressionParserDescriptionInterface;
 use Twig\ExpressionParser\InfixAssociativity;
 use Twig\ExpressionParser\InfixExpressionParserInterface;
 use Twig\Lexer;
@@ -30,7 +31,7 @@ use Twig\Token;
 /**
  * @internal
  */
-final class DotExpressionParser extends AbstractExpressionParser implements InfixExpressionParserInterface
+final class DotExpressionParser extends AbstractExpressionParser implements InfixExpressionParserInterface, ExpressionParserDescriptionInterface
 {
     use ArgumentsTrait;
 
@@ -81,9 +82,14 @@ final class DotExpressionParser extends AbstractExpressionParser implements Infi
         return '.';
     }
 
+    public function getDescription(): string
+    {
+        return 'Get an attribute on a variable';
+    }
+
     public function getPrecedence(): int
     {
-        return 300;
+        return 512;
     }
 
     public function getAssociativity(): InfixAssociativity

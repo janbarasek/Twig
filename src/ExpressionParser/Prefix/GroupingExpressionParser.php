@@ -13,6 +13,7 @@ namespace Twig\ExpressionParser\Prefix;
 
 use Twig\Error\SyntaxError;
 use Twig\ExpressionParser\AbstractExpressionParser;
+use Twig\ExpressionParser\ExpressionParserDescriptionInterface;
 use Twig\ExpressionParser\PrefixExpressionParserInterface;
 use Twig\Node\Expression\AbstractExpression;
 use Twig\Node\Expression\ListExpression;
@@ -23,7 +24,7 @@ use Twig\Token;
 /**
  * @internal
  */
-final class GroupingExpressionParser extends AbstractExpressionParser implements PrefixExpressionParserInterface
+final class GroupingExpressionParser extends AbstractExpressionParser implements PrefixExpressionParserInterface, ExpressionParserDescriptionInterface
 {
     public function parse(Parser $parser, Token $token): AbstractExpression
     {
@@ -63,6 +64,11 @@ final class GroupingExpressionParser extends AbstractExpressionParser implements
     public function getName(): string
     {
         return '(';
+    }
+
+    public function getDescription(): string
+    {
+        return 'Explicit group expression (a)';
     }
 
     public function getPrecedence(): int

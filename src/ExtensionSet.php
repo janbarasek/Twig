@@ -493,7 +493,7 @@ final class ExtensionSet
 
         $expressionParsers = [];
         foreach ($operators[0] as $operator => $op) {
-            $expressionParsers[] = new UnaryOperatorExpressionParser($op['class'], $operator, $op['precedence'], $op['precedence_change'] ?? null, $op['aliases'] ?? []);
+            $expressionParsers[] = new UnaryOperatorExpressionParser($op['class'], $operator, $op['precedence'], $op['precedence_change'] ?? null, '', $op['aliases'] ?? []);
         }
         foreach ($operators[1] as $operator => $op) {
             $op['associativity'] = match ($op['associativity']) {

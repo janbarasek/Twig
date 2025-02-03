@@ -13,8 +13,7 @@ namespace Twig\ExpressionParser\Prefix;
 
 use Twig\Error\SyntaxError;
 use Twig\ExpressionParser\AbstractExpressionParser;
-use Twig\ExpressionParser\ExpressionParserType;
-use Twig\ExpressionParser\PrecedenceChange;
+use Twig\ExpressionParser\ExpressionParserDescriptionInterface;
 use Twig\ExpressionParser\PrefixExpressionParserInterface;
 use Twig\Lexer;
 use Twig\Node\Expression\AbstractExpression;
@@ -28,7 +27,7 @@ use Twig\Token;
 /**
  * @internal
  */
-final class LiteralExpressionParser extends AbstractExpressionParser implements PrefixExpressionParserInterface
+final class LiteralExpressionParser extends AbstractExpressionParser implements PrefixExpressionParserInterface, ExpressionParserDescriptionInterface
 {
     private string $type = 'literal';
 
@@ -110,6 +109,11 @@ final class LiteralExpressionParser extends AbstractExpressionParser implements 
     public function getName(): string
     {
         return $this->type;
+    }
+
+    public function getDescription(): string
+    {
+        return 'A literal value (boolean, string, number, sequence, mapping, ...)';
     }
 
     public function getPrecedence(): int

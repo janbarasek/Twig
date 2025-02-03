@@ -328,12 +328,14 @@ final class CoreExtension extends AbstractExtension
     public function getExpressionParsers(): array
     {
         return [
+            // unary operators
             new UnaryOperatorExpressionParser(NotUnary::class, 'not', 50, new PrecedenceChange('twig/twig', '3.15', 70)),
             new UnaryOperatorExpressionParser(NegUnary::class, '-', 500),
             new UnaryOperatorExpressionParser(PosUnary::class, '+', 500),
 
-            new BinaryOperatorExpressionParser(ElvisBinary::class, '?:', 5, InfixAssociativity::Right, aliases: ['? :']),
-            new BinaryOperatorExpressionParser(NullCoalesceBinary::class, '??', 300, InfixAssociativity::Right, new PrecedenceChange('twig/twig', '3.15', 5)),
+            // binary operators
+            new BinaryOperatorExpressionParser(ElvisBinary::class, '?:', 5, InfixAssociativity::Right, description: 'Elvis operator (a ?: b)', aliases: ['? :']),
+            new BinaryOperatorExpressionParser(NullCoalesceBinary::class, '??', 300, InfixAssociativity::Right, new PrecedenceChange('twig/twig', '3.15', 5), description: 'Null coalescing operator (a ?? b)'),
             new BinaryOperatorExpressionParser(OrBinary::class, 'or', 10),
             new BinaryOperatorExpressionParser(XorBinary::class, 'xor', 12),
             new BinaryOperatorExpressionParser(AndBinary::class, 'and', 15),
@@ -360,22 +362,30 @@ final class CoreExtension extends AbstractExtension
             new BinaryOperatorExpressionParser(ConcatBinary::class, '~', 40, precedenceChange: new PrecedenceChange('twig/twig', '3.15', 27)),
             new BinaryOperatorExpressionParser(MulBinary::class, '*', 60),
             new BinaryOperatorExpressionParser(DivBinary::class, '/', 60),
-            new BinaryOperatorExpressionParser(FloorDivBinary::class, '//', 60),
+            new BinaryOperatorExpressionParser(FloorDivBinary::class, '//', 60, description: 'Floor division'),
             new BinaryOperatorExpressionParser(ModBinary::class, '%', 60),
-            new BinaryOperatorExpressionParser(PowerBinary::class, '**', 200, InfixAssociativity::Right),
+            new BinaryOperatorExpressionParser(PowerBinary::class, '**', 200, InfixAssociativity::Right, description: 'Exponentiation operator'),
 
+            // ternary operator
             new ConditionalTernaryExpressionParser(),
 
+            // Twig callables
             new IsExpressionParser(),
             new IsNotExpressionParser(),
+            new FilterExpressionParser(),
+            new FunctionExpressionParser(),
+
+            // get attribute operators
             new DotExpressionParser(),
             new SquareBracketExpressionParser(),
 
+            // group expression
             new GroupingExpressionParser(),
-            new FilterExpressionParser(),
-            new FunctionExpressionParser(),
+
+            // arrow function
             new ArrowExpressionParser(),
 
+            // all literals
             new LiteralExpressionParser(),
         ];
     }

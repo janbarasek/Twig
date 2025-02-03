@@ -378,6 +378,8 @@ Node
 Operators
 ---------
 
+* An operator precedence must be part of the [0, 512] range as of Twig 3.20.
+
 * The ``.`` operator allows accessing class constants as of Twig 3.15.
   This can be a BC break if you don't use UPPERCASE constant names.
 
@@ -432,6 +434,22 @@ Operators
     {# or #}
 
     {{ (not 1) * 2 }} {# this is equivalent to what Twig 4.x will do without the parentheses #}
+
+* Using the ``|`` operator in an expression with ``+`` or ``-`` without explicit
+  parentheses to clarify precedence triggers a deprecation as of Twig 3.20 (in
+  Twig 4.0, ``|`` will have a higher precedence than ``+`` and ``-``).
+
+  For example, the following expression will trigger a deprecation in Twig 3.20::
+
+    {{ -1|abs }}
+
+  To avoid the deprecation, add parentheses to clarify the precedence::
+
+    {{ -(1|abs) }} {# this is equivalent to what Twig 3.x does without the parentheses #}
+
+    {# or #}
+
+    {{ (-1)|abs }} {# this is equivalent to what Twig 4.x will do without the parentheses #}
 
 * The ``Twig\Extension\ExtensionInterface::getOperators()`` method is deprecated
   as of Twig 3.20, use ``Twig\Extension\ExtensionInterface::getExpressionParsers()``

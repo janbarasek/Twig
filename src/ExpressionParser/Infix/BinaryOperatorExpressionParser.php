@@ -12,6 +12,7 @@
 namespace Twig\ExpressionParser\Infix;
 
 use Twig\ExpressionParser\AbstractExpressionParser;
+use Twig\ExpressionParser\ExpressionParserDescriptionInterface;
 use Twig\ExpressionParser\InfixAssociativity;
 use Twig\ExpressionParser\InfixExpressionParserInterface;
 use Twig\ExpressionParser\PrecedenceChange;
@@ -23,7 +24,7 @@ use Twig\Token;
 /**
  * @internal
  */
-class BinaryOperatorExpressionParser extends AbstractExpressionParser implements InfixExpressionParserInterface
+class BinaryOperatorExpressionParser extends AbstractExpressionParser implements InfixExpressionParserInterface, ExpressionParserDescriptionInterface
 {
     public function __construct(
         /** @var class-string<AbstractBinary> */
@@ -32,6 +33,7 @@ class BinaryOperatorExpressionParser extends AbstractExpressionParser implements
         private int $precedence,
         private InfixAssociativity $associativity = InfixAssociativity::Left,
         private ?PrecedenceChange $precedenceChange = null,
+        private ?string $description = null,
         private array $aliases = [],
     ) {
     }
@@ -54,6 +56,11 @@ class BinaryOperatorExpressionParser extends AbstractExpressionParser implements
     public function getName(): string
     {
         return $this->name;
+    }
+
+    public function getDescription(): string
+    {
+        return $this->description ?? '';
     }
 
     public function getPrecedence(): int

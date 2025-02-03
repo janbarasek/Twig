@@ -12,6 +12,7 @@
 namespace Twig\ExpressionParser\Infix;
 
 use Twig\ExpressionParser\AbstractExpressionParser;
+use Twig\ExpressionParser\ExpressionParserDescriptionInterface;
 use Twig\ExpressionParser\InfixAssociativity;
 use Twig\ExpressionParser\InfixExpressionParserInterface;
 use Twig\Node\Expression\AbstractExpression;
@@ -22,7 +23,7 @@ use Twig\Token;
 /**
  * @internal
  */
-final class ArrowExpressionParser extends AbstractExpressionParser implements InfixExpressionParserInterface
+final class ArrowExpressionParser extends AbstractExpressionParser implements InfixExpressionParserInterface, ExpressionParserDescriptionInterface
 {
     public function parse(Parser $parser, AbstractExpression $expr, Token $token): AbstractExpression
     {
@@ -33,6 +34,11 @@ final class ArrowExpressionParser extends AbstractExpressionParser implements In
     public function getName(): string
     {
         return '=>';
+    }
+
+    public function getDescription(): string
+    {
+        return 'Arrow function (x => expr)';
     }
 
     public function getPrecedence(): int

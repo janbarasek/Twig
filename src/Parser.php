@@ -15,6 +15,7 @@ namespace Twig;
 use Twig\Error\SyntaxError;
 use Twig\ExpressionParser\ExpressionParserInterface;
 use Twig\ExpressionParser\ExpressionParsers;
+use Twig\ExpressionParser\ExpressionParserType;
 use Twig\ExpressionParser\Prefix\LiteralExpressionParser;
 use Twig\ExpressionParser\PrefixExpressionParserInterface;
 use Twig\Node\BlockNode;
@@ -563,10 +564,11 @@ class Parser
             return;
         }
 
+        if ($expr->hasExplicitParentheses()) {
+            return;
+        }
+
         if ($expressionParser instanceof PrefixExpressionParserInterface) {
-            if ($expr->hasExplicitParentheses()) {
-                return;
-            }
             /** @var AbstractExpression $node */
             $node = $expr->getNode('node');
             foreach ($precedenceChanges as $ep => $changes) {
@@ -575,17 +577,17 @@ class Parser
                 }
                 if ($node->hasAttribute('expression_parser') && $ep === $node->getAttribute('expression_parser')) {
                     $change = $expressionParser->getPrecedenceChange();
-                    trigger_deprecation($change->getPackage(), $change->getVersion(), \sprintf('Add explicit parentheses around the "%s" unary operator to avoid behavior change in the next major version as its precedence will change in "%s" at line %d.', $expressionParser->getName(), $this->getStream()->getSourceContext()->getName(), $node->getTemplateLine()));
+                    trigger_deprecation($change->getPackage(), $change->getVersion(), \sprintf('As the "%s" %s operator will change its precedence in the next major version, add explicit parentheses to avoid behavior change in "%s" at line %d.', $expressionParser->getName(), ExpressionParserType::getType($expressionParser)->value, $this->getStream()->getSourceContext()->getName(), $node->getTemplateLine()));
                 }
             }
-        } else {
-            foreach ($precedenceChanges[$expressionParser] as $ep) {
-                foreach ($expr as $node) {
-                    /** @var AbstractExpression $node */
-                    if ($node->hasAttribute('expression_parser') && $ep === $node->getAttribute('expression_parser') && !$node->hasExplicitParentheses()) {
-                        $change = $ep->getPrecedenceChange();
-                        trigger_deprecation($change->getPackage(), $change->getVersion(), \sprintf('Add explicit parentheses around the "%s" binary operator to avoid behavior change in the next major version as its precedence will change in "%s" at line %d.', $ep->getName(), $this->getStream()->getSourceContext()->getName(), $node->getTemplateLine()));
-                    }
+        }
+
+        foreach ($precedenceChanges[$expressionParser] as $ep) {
+            foreach ($expr as $node) {
+                /** @var AbstractExpression $node */
+                if ($node->hasAttribute('expression_parser') && $ep === $node->getAttribute('expression_parser') && !$node->hasExplicitParentheses()) {
+                    $change = $ep->getPrecedenceChange();
+                    trigger_deprecation($change->getPackage(), $change->getVersion(), \sprintf('As the "%s" %s operator will change its precedence in the next major version, add explicit parentheses to avoid behavior change in "%s" at line %d.', $ep->getName(), ExpressionParserType::getType($ep)->value, $this->getStream()->getSourceContext()->getName(), $node->getTemplateLine()));
                 }
             }
         }

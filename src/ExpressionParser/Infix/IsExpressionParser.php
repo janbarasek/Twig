@@ -13,6 +13,7 @@
 
 use Twig\Attribute\FirstClassTwigCallableReady;
 use Twig\ExpressionParser\AbstractExpressionParser;
+use Twig\ExpressionParser\ExpressionParserDescriptionInterface;
 use Twig\ExpressionParser\InfixAssociativity;
 use Twig\ExpressionParser\InfixExpressionParserInterface;
 use Twig\Node\Expression\AbstractExpression;
@@ -27,7 +28,7 @@ use Twig\TwigTest;
 /**
  * @internal
  */
-class IsExpressionParser extends AbstractExpressionParser implements InfixExpressionParserInterface
+class IsExpressionParser extends AbstractExpressionParser implements InfixExpressionParserInterface, ExpressionParserDescriptionInterface
 {
     use ArgumentsTrait;
 
@@ -69,6 +70,11 @@ class IsExpressionParser extends AbstractExpressionParser implements InfixExpres
     public function getName(): string
     {
         return 'is';
+    }
+
+    public function getDescription(): string
+    {
+        return 'Twig tests';
     }
 
     public function getAssociativity(): InfixAssociativity

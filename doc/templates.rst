@@ -186,28 +186,6 @@ filters.
 
         {{ ('HELLO' ~ 'FABIEN')|lower }}
 
-    A common mistake is to forget using parentheses for filters on negative
-    numbers as a negative number in Twig is represented by the ``-`` operator
-    followed by a positive number. As the ``-`` operator has a lower precedence
-    than the filter operator, it can lead to confusion:
-
-    .. code-block:: twig
-
-        {{ -1|abs }} {# returns -1 #}
-        {{ -1**0 }} {# returns -1 #}
-
-        {# as it is equivalent to #}
-
-        {{ -(1|abs) }}
-        {{ -(1**0) }}
-
-    For such cases, use parentheses to force the precedence:
-
-    .. code-block:: twig
-
-        {{ (-1)|abs }} {# returns 1 as expected #}
-        {{ (-1)**0 }} {# returns 1 as expected #}
-
 Functions
 ---------
 
@@ -703,14 +681,16 @@ Twig allows you to do math in templates; the following operators are supported:
   ``4``.
 
 * ``//``: Divides two numbers and returns the floored integer result. ``{{ 20
-  // 7 }}`` is ``2``, ``{{ -20  // 7 }}`` is ``-3`` (this is just syntactic
+  // 7 }}`` is ``2``, ``{{ -20 // 7 }}`` is ``-3`` (this is just syntactic
   sugar for the :doc:`round<filters/round>` filter).
 
 * ``*``: Multiplies the left operand with the right one. ``{{ 2 * 2 }}`` would
   return ``4``.
 
 * ``**``: Raises the left operand to the power of the right operand. ``{{ 2 **
-  3 }}`` would return ``8``.
+  3 }}`` would return ``8``. Be careful as the ``**`` operator is right
+  associative, which means that ``{{ -1**0 }}`` is equivalent to ``{{ -(1**0)
+  }}`` and not ``{{ (-1)**0 }}``.
 
 .. _template_logic:
 

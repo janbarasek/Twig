@@ -1,5 +1,7 @@
 # 3.21.0 (2025-XX-XX)
 
+ * Deprecate using the `|` operator in an expression with `+` or `-` without using parentheses to clarify precedence
+ * Deprecate operator precedence outside of the [0, 512] range
  * Introduce expression parser classes to describe operators and operands provided by extensions
    instead of arrays (it comes with many deprecations that are documented in
    the ``deprecated`` documentation chapter)

@@ -14,6 +14,7 @@ namespace Twig\ExpressionParser\Infix;
 use Twig\Attribute\FirstClassTwigCallableReady;
 use Twig\Error\SyntaxError;
 use Twig\ExpressionParser\AbstractExpressionParser;
+use Twig\ExpressionParser\ExpressionParserDescriptionInterface;
 use Twig\ExpressionParser\InfixAssociativity;
 use Twig\ExpressionParser\InfixExpressionParserInterface;
 use Twig\Node\EmptyNode;
@@ -26,7 +27,7 @@ use Twig\Token;
 /**
  * @internal
  */
-final class FunctionExpressionParser extends AbstractExpressionParser implements InfixExpressionParserInterface
+final class FunctionExpressionParser extends AbstractExpressionParser implements InfixExpressionParserInterface, ExpressionParserDescriptionInterface
 {
     use ArgumentsTrait;
 
@@ -72,9 +73,14 @@ final class FunctionExpressionParser extends AbstractExpressionParser implements
         return '(';
     }
 
+    public function getDescription(): string
+    {
+        return 'Twig function call';
+    }
+
     public function getPrecedence(): int
     {
-        return 300;
+        return 512;
     }
 
     public function getAssociativity(): InfixAssociativity

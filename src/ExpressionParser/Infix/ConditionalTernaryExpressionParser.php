@@ -12,6 +12,7 @@
 namespace Twig\ExpressionParser\Infix;
 
 use Twig\ExpressionParser\AbstractExpressionParser;
+use Twig\ExpressionParser\ExpressionParserDescriptionInterface;
 use Twig\ExpressionParser\InfixAssociativity;
 use Twig\ExpressionParser\InfixExpressionParserInterface;
 use Twig\Node\Expression\AbstractExpression;
@@ -23,7 +24,7 @@ use Twig\Token;
 /**
  * @internal
  */
-final class ConditionalTernaryExpressionParser extends AbstractExpressionParser implements InfixExpressionParserInterface
+final class ConditionalTernaryExpressionParser extends AbstractExpressionParser implements InfixExpressionParserInterface, ExpressionParserDescriptionInterface
 {
     public function parse(Parser $parser, AbstractExpression $left, Token $token): AbstractExpression
     {
@@ -42,6 +43,11 @@ final class ConditionalTernaryExpressionParser extends AbstractExpressionParser 
     public function getName(): string
     {
         return '?';
+    }
+
+    public function getDescription(): string
+    {
+        return 'Conditional operator (a ? b : c)';
     }
 
     public function getPrecedence(): int
