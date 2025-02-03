@@ -87,7 +87,7 @@ final class MacroTokenParser extends AbstractTokenParser
             $token = $stream->expect(Token::NAME_TYPE, null, 'An argument must be a name');
             $name = new LocalVariable($token->getValue(), $this->parser->getCurrentToken()->getLine());
             if ($token = $stream->nextIf(Token::OPERATOR_TYPE, '=')) {
-                $default = $this->parser->getExpressionParser()->parseExpression();
+                $default = $this->parser->parseExpression();
             } else {
                 $default = new ConstantExpression(null, $this->parser->getCurrentToken()->getLine());
                 $default->setAttribute('is_implicit', true);

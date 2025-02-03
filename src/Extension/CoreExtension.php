@@ -16,8 +16,53 @@ use Twig\Environment;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
+use Twig\ExpressionParser\Infix\ArrowExpressionParser;
+use Twig\ExpressionParser\Infix\BinaryOperatorExpressionParser;
+use Twig\ExpressionParser\Infix\ConditionalTernaryExpressionParser;
+use Twig\ExpressionParser\Infix\DotExpressionParser;
+use Twig\ExpressionParser\Infix\FilterExpressionParser;
+use Twig\ExpressionParser\Infix\FunctionExpressionParser;
+use Twig\ExpressionParser\Infix\IsExpressionParser;
+use Twig\ExpressionParser\Infix\IsNotExpressionParser;
+use Twig\ExpressionParser\Infix\SquareBracketExpressionParser;
+use Twig\ExpressionParser\InfixAssociativity;
+use Twig\ExpressionParser\PrecedenceChange;
+use Twig\ExpressionParser\Prefix\GroupingExpressionParser;
+use Twig\ExpressionParser\Prefix\LiteralExpressionParser;
+use Twig\ExpressionParser\Prefix\UnaryOperatorExpressionParser;
 use Twig\Markup;
 use Twig\Node\Expression\AbstractExpression;
+use Twig\Node\Expression\Binary\AddBinary;
+use Twig\Node\Expression\Binary\AndBinary;
+use Twig\Node\Expression\Binary\BitwiseAndBinary;
+use Twig\Node\Expression\Binary\BitwiseOrBinary;
+use Twig\Node\Expression\Binary\BitwiseXorBinary;
+use Twig\Node\Expression\Binary\ConcatBinary;
+use Twig\Node\Expression\Binary\DivBinary;
+use Twig\Node\Expression\Binary\ElvisBinary;
+use Twig\Node\Expression\Binary\EndsWithBinary;
+use Twig\Node\Expression\Binary\EqualBinary;
+use Twig\Node\Expression\Binary\FloorDivBinary;
+use Twig\Node\Expression\Binary\GreaterBinary;
+use Twig\Node\Expression\Binary\GreaterEqualBinary;
+use Twig\Node\Expression\Binary\HasEveryBinary;
+use Twig\Node\Expression\Binary\HasSomeBinary;
+use Twig\Node\Expression\Binary\InBinary;
+use Twig\Node\Expression\Binary\LessBinary;
+use Twig\Node\Expression\Binary\LessEqualBinary;
+use Twig\Node\Expression\Binary\MatchesBinary;
+use Twig\Node\Expression\Binary\ModBinary;
+use Twig\Node\Expression\Binary\MulBinary;
+use Twig\Node\Expression\Binary\NotEqualBinary;
+use Twig\Node\Expression\Binary\NotInBinary;
+use Twig\Node\Expression\Binary\NullCoalesceBinary;
+use Twig\Node\Expression\Binary\OrBinary;
+use Twig\Node\Expression\Binary\PowerBinary;
+use Twig\Node\Expression\Binary\RangeBinary;
+use Twig\Node\Expression\Binary\SpaceshipBinary;
+use Twig\Node\Expression\Binary\StartsWithBinary;
+use Twig\Node\Expression\Binary\SubBinary;
+use Twig\Node\Expression\Binary\XorBinary;
 use Twig\Node\Expression\BlockReferenceExpression;
 use Twig\Node\Expression\Filter\DefaultFilter;
 use Twig\Node\Expression\FunctionNode\EnumCasesFunction;
@@ -31,50 +76,10 @@ use Twig\Node\Expression\Test\EvenTest;
 use Twig\Node\Expression\Test\NullTest;
 use Twig\Node\Expression\Test\OddTest;
 use Twig\Node\Expression\Test\SameasTest;
+use Twig\Node\Expression\Unary\NegUnary;
+use Twig\Node\Expression\Unary\NotUnary;
+use Twig\Node\Expression\Unary\PosUnary;
 use Twig\Node\Node;
-use Twig\Operator\Binary\AddBinaryOperator;
-use Twig\Operator\Binary\AndBinaryOperator;
-use Twig\Operator\Binary\ArrowBinaryOperator;
-use Twig\Operator\Binary\BitwiseAndBinaryOperator;
-use Twig\Operator\Binary\BitwiseOrBinaryOperator;
-use Twig\Operator\Binary\BitwiseXorBinaryOperator;
-use Twig\Operator\Binary\ConcatBinaryOperator;
-use Twig\Operator\Binary\DivBinaryOperator;
-use Twig\Operator\Binary\DotBinaryOperator;
-use Twig\Operator\Binary\ElvisBinaryOperator;
-use Twig\Operator\Binary\EndsWithBinaryOperator;
-use Twig\Operator\Binary\EqualBinaryOperator;
-use Twig\Operator\Binary\FilterBinaryOperator;
-use Twig\Operator\Binary\FloorDivBinaryOperator;
-use Twig\Operator\Binary\FunctionBinaryOperator;
-use Twig\Operator\Binary\GreaterBinaryOperator;
-use Twig\Operator\Binary\GreaterEqualBinaryOperator;
-use Twig\Operator\Binary\HasEveryBinaryOperator;
-use Twig\Operator\Binary\HasSomeBinaryOperator;
-use Twig\Operator\Binary\InBinaryOperator;
-use Twig\Operator\Binary\IsBinaryOperator;
-use Twig\Operator\Binary\IsNotBinaryOperator;
-use Twig\Operator\Binary\LessBinaryOperator;
-use Twig\Operator\Binary\LessEqualBinaryOperator;
-use Twig\Operator\Binary\MatchesBinaryOperator;
-use Twig\Operator\Binary\ModBinaryOperator;
-use Twig\Operator\Binary\MulBinaryOperator;
-use Twig\Operator\Binary\NotEqualBinaryOperator;
-use Twig\Operator\Binary\NotInBinaryOperator;
-use Twig\Operator\Binary\NullCoalesceBinaryOperator;
-use Twig\Operator\Binary\OrBinaryOperator;
-use Twig\Operator\Binary\PowerBinaryOperator;
-use Twig\Operator\Binary\RangeBinaryOperator;
-use Twig\Operator\Binary\SpaceshipBinaryOperator;
-use Twig\Operator\Binary\SquareBracketBinaryOperator;
-use Twig\Operator\Binary\StartsWithBinaryOperator;
-use Twig\Operator\Binary\SubBinaryOperator;
-use Twig\Operator\Binary\XorBinaryOperator;
-use Twig\Operator\Ternary\ConditionalTernaryOperator;
-use Twig\Operator\Unary\NegUnaryOperator;
-use Twig\Operator\Unary\NotUnaryOperator;
-use Twig\Operator\Unary\ParenthesisUnaryOperator;
-use Twig\Operator\Unary\PosUnaryOperator;
 use Twig\Parser;
 use Twig\Sandbox\SecurityNotAllowedMethodError;
 use Twig\Sandbox\SecurityNotAllowedPropertyError;
@@ -320,54 +325,58 @@ final class CoreExtension extends AbstractExtension
         return [];
     }
 
-    public function getOperators(): array
+    public function getExpressionParsers(): array
     {
         return [
-            new NotUnaryOperator(),
-            new NegUnaryOperator(),
-            new PosUnaryOperator(),
-            new ParenthesisUnaryOperator(),
+            new UnaryOperatorExpressionParser(NotUnary::class, 'not', 50, new PrecedenceChange('twig/twig', '3.15', 70)),
+            new UnaryOperatorExpressionParser(NegUnary::class, '-', 500),
+            new UnaryOperatorExpressionParser(PosUnary::class, '+', 500),
 
-            new ElvisBinaryOperator(),
-            new NullCoalesceBinaryOperator(),
-            new OrBinaryOperator(),
-            new XorBinaryOperator(),
-            new AndBinaryOperator(),
-            new BitwiseOrBinaryOperator(),
-            new BitwiseXorBinaryOperator(),
-            new BitwiseAndBinaryOperator(),
-            new EqualBinaryOperator(),
-            new NotEqualBinaryOperator(),
-            new SpaceshipBinaryOperator(),
-            new LessBinaryOperator(),
-            new GreaterBinaryOperator(),
-            new GreaterEqualBinaryOperator(),
-            new LessEqualBinaryOperator(),
-            new NotInBinaryOperator(),
-            new InBinaryOperator(),
-            new MatchesBinaryOperator(),
-            new StartsWithBinaryOperator(),
-            new EndsWithBinaryOperator(),
-            new HasSomeBinaryOperator(),
-            new HasEveryBinaryOperator(),
-            new RangeBinaryOperator(),
-            new AddBinaryOperator(),
-            new SubBinaryOperator(),
-            new ConcatBinaryOperator(),
-            new MulBinaryOperator(),
-            new DivBinaryOperator(),
-            new FloorDivBinaryOperator(),
-            new ModBinaryOperator(),
-            new IsBinaryOperator(),
-            new IsNotBinaryOperator(),
-            new PowerBinaryOperator(),
-            new FilterBinaryOperator(),
-            new DotBinaryOperator(),
-            new SquareBracketBinaryOperator(),
-            new FunctionBinaryOperator(),
-            new ArrowBinaryOperator(),
+            new BinaryOperatorExpressionParser(ElvisBinary::class, '?:', 5, InfixAssociativity::Right, aliases: ['? :']),
+            new BinaryOperatorExpressionParser(NullCoalesceBinary::class, '??', 300, InfixAssociativity::Right, new PrecedenceChange('twig/twig', '3.15', 5)),
+            new BinaryOperatorExpressionParser(OrBinary::class, 'or', 10),
+            new BinaryOperatorExpressionParser(XorBinary::class, 'xor', 12),
+            new BinaryOperatorExpressionParser(AndBinary::class, 'and', 15),
+            new BinaryOperatorExpressionParser(BitwiseOrBinary::class, 'b-or', 16),
+            new BinaryOperatorExpressionParser(BitwiseXorBinary::class, 'b-xor', 17),
+            new BinaryOperatorExpressionParser(BitwiseAndBinary::class, 'b-and', 18),
+            new BinaryOperatorExpressionParser(EqualBinary::class, '==', 20),
+            new BinaryOperatorExpressionParser(NotEqualBinary::class, '!=', 20),
+            new BinaryOperatorExpressionParser(SpaceshipBinary::class, '<=>', 20),
+            new BinaryOperatorExpressionParser(LessBinary::class, '<', 20),
+            new BinaryOperatorExpressionParser(GreaterBinary::class, '>', 20),
+            new BinaryOperatorExpressionParser(GreaterEqualBinary::class, '>=', 20),
+            new BinaryOperatorExpressionParser(LessEqualBinary::class, '<=', 20),
+            new BinaryOperatorExpressionParser(NotInBinary::class, 'not in', 20),
+            new BinaryOperatorExpressionParser(InBinary::class, 'in', 20),
+            new BinaryOperatorExpressionParser(MatchesBinary::class, 'matches', 20),
+            new BinaryOperatorExpressionParser(StartsWithBinary::class, 'starts with', 20),
+            new BinaryOperatorExpressionParser(EndsWithBinary::class, 'ends with', 20),
+            new BinaryOperatorExpressionParser(HasSomeBinary::class, 'has some', 20),
+            new BinaryOperatorExpressionParser(HasEveryBinary::class, 'has every', 20),
+            new BinaryOperatorExpressionParser(RangeBinary::class, '..', 25),
+            new BinaryOperatorExpressionParser(AddBinary::class, '+', 30),
+            new BinaryOperatorExpressionParser(SubBinary::class, '-', 30),
+            new BinaryOperatorExpressionParser(ConcatBinary::class, '~', 40, precedenceChange: new PrecedenceChange('twig/twig', '3.15', 27)),
+            new BinaryOperatorExpressionParser(MulBinary::class, '*', 60),
+            new BinaryOperatorExpressionParser(DivBinary::class, '/', 60),
+            new BinaryOperatorExpressionParser(FloorDivBinary::class, '//', 60),
+            new BinaryOperatorExpressionParser(ModBinary::class, '%', 60),
+            new BinaryOperatorExpressionParser(PowerBinary::class, '**', 200, InfixAssociativity::Right),
 
-            new ConditionalTernaryOperator(),
+            new ConditionalTernaryExpressionParser(),
+
+            new IsExpressionParser(),
+            new IsNotExpressionParser(),
+            new DotExpressionParser(),
+            new SquareBracketExpressionParser(),
+
+            new GroupingExpressionParser(),
+            new FilterExpressionParser(),
+            new FunctionExpressionParser(),
+            new ArrowExpressionParser(),
+
+            new LiteralExpressionParser(),
         ];
     }
 

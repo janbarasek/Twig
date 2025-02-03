@@ -11,8 +11,9 @@
 
 namespace Twig\Extension;
 
+use Twig\ExpressionParser\ExpressionParserInterface;
+use Twig\ExpressionParser\PrecedenceChange;
 use Twig\NodeVisitor\NodeVisitorInterface;
-use Twig\Operator\OperatorInterface;
 use Twig\TokenParser\TokenParserInterface;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
@@ -22,6 +23,8 @@ use Twig\TwigTest;
  * Interface implemented by extension classes.
  *
  * @author Fabien Potencier <fabien@symfony.com>
+ *
+ * @method array<ExpressionParserInterface> getExpressionParsers()
  */
 interface ExtensionInterface
 {
@@ -63,11 +66,11 @@ interface ExtensionInterface
     /**
      * Returns a list of operators to add to the existing list.
      *
-     * @return OperatorInterface[]|array<array>
+     * @return array<array>
      *
-     * @psalm-return OperatorInterface[]|array{
-     *     array<string, array{precedence: int, precedence_change?: OperatorPrecedenceChange, class: class-string<AbstractUnary>}>,
-     *     array<string, array{precedence: int, precedence_change?: OperatorPrecedenceChange, class?: class-string<AbstractBinary>, associativity: ExpressionParser::OPERATOR_*}>
+     * @psalm-return array{
+     *     array<string, array{precedence: int, precedence_change?: PrecedenceChange, class: class-string<AbstractUnary>}>,
+     *     array<string, array{precedence: int, precedence_change?: PrecedenceChange, class?: class-string<AbstractBinary>, associativity: ExpressionParser::OPERATOR_*}>
      * }
      */
     public function getOperators();

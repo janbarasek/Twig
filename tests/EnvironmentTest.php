@@ -18,6 +18,8 @@ use Twig\Cache\FilesystemCache;
 use Twig\Environment;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
+use Twig\ExpressionParser\Infix\BinaryOperatorExpressionParser;
+use Twig\ExpressionParser\Prefix\UnaryOperatorExpressionParser;
 use Twig\Extension\AbstractExtension;
 use Twig\Extension\ExtensionInterface;
 use Twig\Extension\GlobalsInterface;
@@ -26,8 +28,6 @@ use Twig\Loader\FilesystemLoader;
 use Twig\Loader\LoaderInterface;
 use Twig\Node\Node;
 use Twig\NodeVisitor\NodeVisitorInterface;
-use Twig\Operator\Binary\AbstractBinaryOperator;
-use Twig\Operator\Unary\AbstractUnaryOperator;
 use Twig\RuntimeLoader\RuntimeLoaderInterface;
 use Twig\Source;
 use Twig\Token;
@@ -309,8 +309,8 @@ class EnvironmentTest extends TestCase
         $this->assertArrayHasKey('foo_filter', $twig->getFilters());
         $this->assertArrayHasKey('foo_function', $twig->getFunctions());
         $this->assertArrayHasKey('foo_test', $twig->getTests());
-        $this->assertNotNull($twig->getOperators()->getUnary('foo_unary'));
-        $this->assertNotNull($twig->getOperators()->getBinary('foo_binary'));
+        $this->assertNotNull($twig->getExpressionParsers()->getPrefix('foo_unary'));
+        $this->assertNotNull($twig->getExpressionParsers()->getInfix('foo_binary'));
         $this->assertArrayHasKey('foo_global', $twig->getGlobals());
         $visitors = $twig->getNodeVisitors();
         $found = false;
@@ -596,41 +596,11 @@ class EnvironmentTest_Extension extends AbstractExtension implements GlobalsInte
         ];
     }
 
-    public function getOperators(): array
+    public function getExpressionParsers(): array
     {
         return [
-            new class extends AbstractUnaryOperator {
-                public function getOperator(): string
-                {
-                    return 'foo_unary';
-                }
-
-                public function getPrecedence(): int
-                {
-                    return 0;
-                }
-
-                public function getNodeClass(): string
-                {
-                    return '';
-                }
-            },
-            new class extends AbstractBinaryOperator {
-                public function getOperator(): string
-                {
-                    return 'foo_binary';
-                }
-
-                public function getPrecedence(): int
-                {
-                    return 0;
-                }
-
-                public function getNodeClass(): string
-                {
-                    return '';
-                }
-            },
+            new UnaryOperatorExpressionParser('', 'foo_unary', 0),
+            new BinaryOperatorExpressionParser('', 'foo_binary', 0),
         ];
     }
 

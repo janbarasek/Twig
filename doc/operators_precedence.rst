@@ -8,6 +8,7 @@ Precedence  Operator
             +
 70          not
 0           (
+            literal
 
 Binary and Ternary operators precedence:
 
@@ -15,9 +16,9 @@ Binary and Ternary operators precedence:
 Precedence  Operator    Associativity
 =========== =========== =============
 
-300         |           Left
-            .
+300         .           Left
             [
+            |
             (
 250         =>          Left
 200         **          Right

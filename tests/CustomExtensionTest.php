@@ -31,7 +31,7 @@ class CustomExtensionTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage($expectedExceptionMessage);
 
-        $env->getOperators();
+        $env->getExpressionParsers();
     }
 
     public static function provideInvalidExtensions()

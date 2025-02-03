@@ -72,11 +72,11 @@ final class SetTokenParser extends AbstractTokenParser
         return 'set';
     }
 
-    private function parseMultitargetExpression()
+    private function parseMultitargetExpression(): Nodes
     {
         $targets = [];
         while (true) {
-            $targets[] = $this->parser->getExpressionParser()->parseExpression();
+            $targets[] = $this->parser->parseExpression();
             if (!$this->parser->getStream()->nextIf(Token::PUNCTUATION_TYPE, ',')) {
                 break;
             }

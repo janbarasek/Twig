@@ -1,13 +1,14 @@
 <?php
 
 use Twig\Environment;
+use Twig\ExpressionParser\InfixAssociativity;
+use Twig\ExpressionParser\InfixExpressionParserInterface;
+use Twig\ExpressionParser\PrefixExpressionParserInterface;
 use Twig\Loader\ArrayLoader;
-use Twig\Operator\OperatorArity;
-use Twig\Operator\OperatorAssociativity;
 
 require_once dirname(__DIR__).'/vendor/autoload.php';
 
-function printOperators($output, array $operators, bool $withAssociativity = false)
+function printExpressionParsers($output, array $expressionParsers, bool $withAssociativity = false)
 {
     if ($withAssociativity) {
         fwrite($output, "\n=========== =========== =============\n");
@@ -19,24 +20,24 @@ function printOperators($output, array $operators, bool $withAssociativity = fal
         fwrite($output, "=========== ===========\n");
     }
 
-    usort($operators, function($a, $b) {
+    usort($expressionParsers, function($a, $b) {
         $aPrecedence = $a->getPrecedenceChange() ? $a->getPrecedenceChange()->getNewPrecedence() : $a->getPrecedence();
         $bPrecedence = $b->getPrecedenceChange() ? $b->getPrecedenceChange()->getNewPrecedence() : $b->getPrecedence();
         return $bPrecedence - $aPrecedence; 
     });
 
     $current = \PHP_INT_MAX;
-    foreach ($operators as $operator) {
-        $precedence = $operator->getPrecedenceChange() ? $operator->getPrecedenceChange()->getNewPrecedence() : $operator->getPrecedence();
+    foreach ($expressionParsers as $expressionParser) {
+        $precedence = $expressionParser->getPrecedenceChange() ? $expressionParser->getPrecedenceChange()->getNewPrecedence() : $expressionParser->getPrecedence();
         if ($precedence !== $current) {
             $current = $precedence;
             if ($withAssociativity) {
-                fwrite($output, \sprintf("\n%-11d %-11s %s", $precedence, $operator->getOperator(), OperatorAssociativity::Left === $operator->getAssociativity() ? 'Left' : 'Right'));
+                fwrite($output, \sprintf("\n%-11d %-11s %s", $precedence, $expressionParser->getName(), InfixAssociativity::Left === $expressionParser->getAssociativity() ? 'Left' : 'Right'));
             } else {
-                fwrite($output, \sprintf("\n%-11d %s", $precedence, $operator->getOperator()));
+                fwrite($output, \sprintf("\n%-11d %s", $precedence, $expressionParser->getName()));
             }
         } else {
-            fwrite($output, "\n".str_repeat(' ', 12).$operator->getOperator());
+            fwrite($output, "\n".str_repeat(' ', 12).$expressionParser->getName());
         }
     }
     fwrite($output, "\n");
@@ -45,20 +46,20 @@ function printOperators($output, array $operators, bool $withAssociativity = fal
 $output = fopen(dirname(__DIR__).'/doc/operators_precedence.rst', 'w');
 
 $twig = new Environment(new ArrayLoader([]));
-$unaryOperators = [];
-$notUnaryOperators = [];
-foreach ($twig->getOperators() as $operator) {
-    if ($operator->getArity()->value == OperatorArity::Unary->value) {
-        $unaryOperators[] = $operator;
-    } else {
-        $notUnaryOperators[] = $operator;
+$prefixExpressionParsers = [];
+$infixExpressionParsers = [];
+foreach ($twig->getExpressionParsers() as $expressionParser) {
+    if ($expressionParser instanceof PrefixExpressionParserInterface) {
+        $prefixExpressionParsers[] = $expressionParser;
+    } elseif ($expressionParser instanceof InfixExpressionParserInterface) {
+        $infixExpressionParsers[] = $expressionParser;
     }
 }
 
 fwrite($output, "Unary operators precedence:\n");
-printOperators($output, $unaryOperators);
+printExpressionParsers($output, $prefixExpressionParsers);
 
 fwrite($output, "\nBinary and Ternary operators precedence:\n");
-printOperators($output, $notUnaryOperators, true);
+printExpressionParsers($output, $infixExpressionParsers, true);
 
 fclose($output);

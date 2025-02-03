@@ -17,6 +17,7 @@ use Twig\Attribute\FirstClassTwigCallableReady;
 use Twig\Compiler;
 use Twig\Environment;
 use Twig\Error\SyntaxError;
+use Twig\ExpressionParser\Prefix\UnaryOperatorExpressionParser;
 use Twig\Extension\AbstractExtension;
 use Twig\Loader\ArrayLoader;
 use Twig\Node\Expression\ArrayExpression;
@@ -28,7 +29,6 @@ use Twig\Node\Expression\TestExpression;
 use Twig\Node\Expression\Unary\AbstractUnary;
 use Twig\Node\Expression\Variable\ContextVariable;
 use Twig\Node\Node;
-use Twig\Operator\Unary\AbstractUnaryOperator;
 use Twig\Parser;
 use Twig\Source;
 use Twig\TwigFilter;
@@ -571,32 +571,17 @@ class ExpressionParserTest extends TestCase
     {
         $env = new Environment(new ArrayLoader(), ['cache' => false, 'autoescape' => false]);
         $env->addExtension(new class extends AbstractExtension {
-            public function getOperators()
+            public function getExpressionParsers(): array
             {
+                $class = new class(new ConstantExpression('foo', 1), 1) extends AbstractUnary {
+                    public function operator(Compiler $compiler): Compiler
+                    {
+                        return $compiler->raw('!');
+                    }
+                };
+
                 return [
-                    new class extends AbstractUnaryOperator {
-                        public function getOperator(): string
-                        {
-                            return '!';
-                        }
-
-                        public function getPrecedence(): int
-                        {
-                            return 50;
-                        }
-
-                        public function getNodeClass(): string
-                        {
-                            $class = new class(new ConstantExpression('foo', 1), 1) extends AbstractUnary {
-                                public function operator(Compiler $compiler): Compiler
-                                {
-                                    return $compiler->raw('!');
-                                }
-                            };
-
-                            return $class::class;
-                        }
-                    },
+                    new UnaryOperatorExpressionParser($class::class, '!', 50),
                 ];
             }
         });

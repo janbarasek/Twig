@@ -13,6 +13,10 @@
 namespace Twig;
 
 use Twig\Error\SyntaxError;
+use Twig\ExpressionParser\ExpressionParserInterface;
+use Twig\ExpressionParser\ExpressionParsers;
+use Twig\ExpressionParser\Prefix\LiteralExpressionParser;
+use Twig\ExpressionParser\PrefixExpressionParserInterface;
 use Twig\Node\BlockNode;
 use Twig\Node\BlockReferenceNode;
 use Twig\Node\BodyNode;
@@ -49,10 +53,12 @@ class Parser
     private $embeddedTemplates = [];
     private $varNameSalt = 0;
     private $ignoreUnknownTwigCallables = false;
+    private ExpressionParsers $parsers;
 
     public function __construct(
         private Environment $env,
     ) {
+        $this->parsers = $env->getExpressionParsers();
     }
 
     public function getEnvironment(): Environment
@@ -76,10 +82,6 @@ class Parser
         // node visitors
         if (null === $this->visitors) {
             $this->visitors = $this->env->getNodeVisitors();
-        }
-
-        if (null === $this->expressionParser) {
-            $this->expressionParser = new ExpressionParser($this, $this->env);
         }
 
         $this->stream = $stream;
@@ -155,7 +157,7 @@ class Parser
 
                 case $this->stream->getCurrent()->test(Token::VAR_START_TYPE):
                     $token = $this->stream->next();
-                    $expr = $this->expressionParser->parseExpression();
+                    $expr = $this->parseExpression();
                     $this->stream->expect(Token::VAR_END_TYPE);
                     $rv[] = new PrintNode($expr, $token->getLine());
                     break;
@@ -337,9 +339,40 @@ class Parser
         array_shift($this->importedSymbols);
     }
 
+    /**
+     * @deprecated since Twig 3.20
+     */
     public function getExpressionParser(): ExpressionParser
     {
+        trigger_deprecation('twig/twig', '3.20', 'Method "%s()" is deprecated, use "parseExpression()" instead.', __METHOD__);
+
+        if (null === $this->expressionParser) {
+            $this->expressionParser = new ExpressionParser($this, $this->env);
+        }
+
         return $this->expressionParser;
+    }
+
+    public function parseExpression(int $precedence = 0): AbstractExpression
+    {
+        $token = $this->getCurrentToken();
+        if ($token->test(Token::OPERATOR_TYPE) && $ep = $this->parsers->getPrefix($token->getValue())) {
+            $this->getStream()->next();
+            $expr = $ep->parse($this, $token);
+            $this->checkPrecedenceDeprecations($ep, $expr);
+        } else {
+            $expr = $this->parsers->getPrefixByClass(LiteralExpressionParser::class)->parse($this, $token);
+        }
+
+        $token = $this->getCurrentToken();
+        while ($token->test(Token::OPERATOR_TYPE) && ($ep = $this->parsers->getInfix($token->getValue())) && $ep->getPrecedence() >= $precedence) {
+            $this->getStream()->next();
+            $expr = $ep->parse($this, $expr, $token);
+            $this->checkPrecedenceDeprecations($ep, $expr);
+            $token = $this->getCurrentToken();
+        }
+
+        return $expr;
     }
 
     public function getParent(): ?Node
@@ -518,5 +551,43 @@ class Parser
         }
 
         return $node;
+    }
+
+    private function checkPrecedenceDeprecations(ExpressionParserInterface $expressionParser, AbstractExpression $expr)
+    {
+        $expr->setAttribute('expression_parser', $expressionParser);
+        $precedenceChanges = $this->parsers->getPrecedenceChanges();
+
+        // Check that the all nodes that are between the 2 precedences have explicit parentheses
+        if (!isset($precedenceChanges[$expressionParser])) {
+            return;
+        }
+
+        if ($expressionParser instanceof PrefixExpressionParserInterface) {
+            if ($expr->hasExplicitParentheses()) {
+                return;
+            }
+            /** @var AbstractExpression $node */
+            $node = $expr->getNode('node');
+            foreach ($precedenceChanges as $ep => $changes) {
+                if (!\in_array($expressionParser, $changes, true)) {
+                    continue;
+                }
+                if ($node->hasAttribute('expression_parser') && $ep === $node->getAttribute('expression_parser')) {
+                    $change = $expressionParser->getPrecedenceChange();
+                    trigger_deprecation($change->getPackage(), $change->getVersion(), \sprintf('Add explicit parentheses around the "%s" unary operator to avoid behavior change in the next major version as its precedence will change in "%s" at line %d.', $expressionParser->getName(), $this->getStream()->getSourceContext()->getName(), $node->getTemplateLine()));
+                }
+            }
+        } else {
+            foreach ($precedenceChanges[$expressionParser] as $ep) {
+                foreach ($expr as $node) {
+                    /** @var AbstractExpression $node */
+                    if ($node->hasAttribute('expression_parser') && $ep === $node->getAttribute('expression_parser') && !$node->hasExplicitParentheses()) {
+                        $change = $ep->getPrecedenceChange();
+                        trigger_deprecation($change->getPackage(), $change->getVersion(), \sprintf('Add explicit parentheses around the "%s" binary operator to avoid behavior change in the next major version as its precedence will change in "%s" at line %d.', $ep->getName(), $this->getStream()->getSourceContext()->getName(), $node->getTemplateLine()));
+                    }
+                }
+            }
+        }
     }
 }

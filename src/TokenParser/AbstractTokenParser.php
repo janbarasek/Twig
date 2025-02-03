@@ -36,8 +36,6 @@ abstract class AbstractTokenParser implements TokenParserInterface
 
     /**
      * Parses an assignment expression like "a, b".
-     *
-     * @return Nodes<AssignContextVariable>
      */
     protected function parseAssignmentExpression(): Nodes
     {

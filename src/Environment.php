@@ -19,6 +19,7 @@ use Twig\Error\Error;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
+use Twig\ExpressionParser\ExpressionParsers;
 use Twig\Extension\CoreExtension;
 use Twig\Extension\EscaperExtension;
 use Twig\Extension\ExtensionInterface;
@@ -30,7 +31,6 @@ use Twig\Loader\LoaderInterface;
 use Twig\Node\ModuleNode;
 use Twig\Node\Node;
 use Twig\NodeVisitor\NodeVisitorInterface;
-use Twig\Operator\Operators;
 use Twig\Runtime\EscaperRuntime;
 use Twig\RuntimeLoader\FactoryRuntimeLoader;
 use Twig\RuntimeLoader\RuntimeLoaderInterface;
@@ -925,9 +925,9 @@ class Environment
     /**
      * @internal
      */
-    public function getOperators(): Operators
+    public function getExpressionParsers(): ExpressionParsers
     {
-        return $this->extensionSet->getOperators();
+        return $this->extensionSet->getExpressionParsers();
     }
 
     private function updateOptionsHash(): void

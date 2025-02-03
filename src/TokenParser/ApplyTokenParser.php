@@ -11,6 +11,7 @@
 
 namespace Twig\TokenParser;
 
+use Twig\ExpressionParser\Infix\FilterExpressionParser;
 use Twig\Node\Expression\Variable\LocalVariable;
 use Twig\Node\Node;
 use Twig\Node\Nodes;
@@ -34,9 +35,9 @@ final class ApplyTokenParser extends AbstractTokenParser
         $lineno = $token->getLine();
         $ref = new LocalVariable(null, $lineno);
         $filter = $ref;
-        $op = $this->parser->getEnvironment()->getOperators()->getBinary('|');
+        $op = $this->parser->getEnvironment()->getExpressionParsers()->getInfixByClass(FilterExpressionParser::class);
         while (true) {
-            $filter = $op->parse($this->parser->getExpressionParser(), $filter, $this->parser->getCurrentToken());
+            $filter = $op->parse($this->parser, $filter, $this->parser->getCurrentToken());
             if (!$this->parser->getStream()->test(Token::OPERATOR_TYPE, '|')) {
                 break;
             }

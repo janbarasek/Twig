@@ -535,25 +535,25 @@ class Lexer
 
     private function getOperatorRegex(): string
     {
-        $operators = ['='];
-        foreach ($this->env->getOperators() as $operator) {
-            $operators = array_merge($operators, [$operator->getOperator()], $operator->getAliases());
+        $expressionParsers = ['='];
+        foreach ($this->env->getExpressionParsers() as $expressionParser) {
+            $expressionParsers = array_merge($expressionParsers, [$expressionParser->getName()], $expressionParser->getAliases());
         }
 
-        $operators = array_combine($operators, array_map('strlen', $operators));
-        arsort($operators);
+        $expressionParsers = array_combine($expressionParsers, array_map('strlen', $expressionParsers));
+        arsort($expressionParsers);
 
         $regex = [];
-        foreach ($operators as $operator => $length) {
+        foreach ($expressionParsers as $expressionParser => $length) {
             // an operator that ends with a character must be followed by
             // a whitespace, a parenthesis, an opening map [ or sequence {
-            $r = preg_quote($operator, '/');
-            if (ctype_alpha($operator[$length - 1])) {
+            $r = preg_quote($expressionParser, '/');
+            if (ctype_alpha($expressionParser[$length - 1])) {
                 $r .= '(?=[\s()\[{])';
             }
 
             // an operator that begins with a character must not have a dot or pipe before
-            if (ctype_alpha($operator[0])) {
+            if (ctype_alpha($expressionParser[0])) {
                 $r = '(?<![\.\|])'.$r;
             }
 
