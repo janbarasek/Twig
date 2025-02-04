@@ -2,6 +2,7 @@
 
  * Fix wrong array index
  * Bump minimum PHP version to 8.1
+ * Add support for registering callbacks for undefined functions, filters or token parsers in the IntegrationTestCase
 
 # 3.19.0 (2025-01-28)
 
@@ -44,7 +45,7 @@
  * Deprecate returning `null` from `TwigFilter::getSafe()` and `TwigFunction::getSafe()`, return `[]` instead
 
 # 3.15.0 (2024-11-17)
- 
+
  * [BC BREAK] Add support for accessing class constants with the dot operator;
    this can be a BC break if you don't use UPPERCASE constant names
  * Add Spanish inflector support for the `plural` and `singular` filters in the String extension
