@@ -19,19 +19,14 @@ namespace Twig\ExpressionParser;
 final class ExpressionParsers implements \IteratorAggregate
 {
     /**
-     * @var array<value-of<ExpressionParserType>, array<string, ExpressionParserInterface>>
+     * @var array<class-string<ExpressionParserInterface>, array<string, ExpressionParserInterface>>
      */
-    private array $parsers = [];
+    private array $parsersByName = [];
 
     /**
-     * @var array<value-of<ExpressionParserType>, array<class-string<ExpressionParserInterface>, ExpressionParserInterface>>
+     * @var array<class-string<ExpressionParserInterface>, ExpressionParserInterface>
      */
     private array $parsersByClass = [];
-
-    /**
-     * @var array<value-of<ExpressionParserType>, array<string, ExpressionParserInterface>>
-     */
-    private array $aliases = [];
 
     /**
      * @var \WeakMap<ExpressionParserInterface, array<ExpressionParserInterface>>|null
@@ -59,11 +54,11 @@ final class ExpressionParsers implements \IteratorAggregate
                 trigger_deprecation('twig/twig', '3.20', 'Precedence for "%s" must be between 0 and 512, got %d.', $parser->getName(), $parser->getPrecedence());
                 // throw new \InvalidArgumentException(\sprintf('Precedence for "%s" must be between 0 and 512, got %d.', $parser->getName(), $parser->getPrecedence()));
             }
-            $type = ExpressionParserType::getType($parser);
-            $this->parsers[$type->value][$parser->getName()] = $parser;
-            $this->parsersByClass[$type->value][get_class($parser)] = $parser;
+            $interface = $parser instanceof PrefixExpressionParserInterface ? PrefixExpressionParserInterface::class : InfixExpressionParserInterface::class;
+            $this->parsersByName[$interface][$parser->getName()] = $parser;
+            $this->parsersByClass[get_class($parser)] = $parser;
             foreach ($parser->getAliases() as $alias) {
-                $this->aliases[$type->value][$alias] = $parser;
+                $this->parsersByName[$interface][$alias] = $parser;
             }
         }
 
@@ -71,42 +66,32 @@ final class ExpressionParsers implements \IteratorAggregate
     }
 
     /**
-     * @param class-string<PrefixExpressionParserInterface> $name
+     * @template T of ExpressionParserInterface
+     *
+     * @param class-string<T> $class
+     *
+     * @return T|null
      */
-    public function getPrefixByClass(string $name): ?PrefixExpressionParserInterface
+    public function getByClass(string $class): ?ExpressionParserInterface
     {
-        return $this->parsersByClass[ExpressionParserType::Prefix->value][$name] ?? null;
-    }
-
-    public function getPrefix(string $name): ?PrefixExpressionParserInterface
-    {
-        return
-            $this->parsers[ExpressionParserType::Prefix->value][$name]
-            ?? $this->aliases[ExpressionParserType::Prefix->value][$name]
-            ?? null
-        ;
+        return $this->parsersByClass[$class] ?? null;
     }
 
     /**
-     * @param class-string<InfixExpressionParserInterface> $name
+     * @template T of ExpressionParserInterface
+     *
+     * @param class-string<T> $interface
+     *
+     * @return T|null
      */
-    public function getInfixByClass(string $name): ?InfixExpressionParserInterface
+    public function getByName(string $interface, string $name): ?ExpressionParserInterface
     {
-        return $this->parsersByClass[ExpressionParserType::Infix->value][$name] ?? null;
-    }
-
-    public function getInfix(string $name): ?InfixExpressionParserInterface
-    {
-        return
-            $this->parsers[ExpressionParserType::Infix->value][$name]
-            ?? $this->aliases[ExpressionParserType::Infix->value][$name]
-            ?? null
-        ;
+        return $this->parsersByName[$interface][$name] ?? null;
     }
 
     public function getIterator(): \Traversable
     {
-        foreach ($this->parsers as $parsers) {
+        foreach ($this->parsersByName as $parsers) {
             // we don't yield the keys
             yield from $parsers;
         }

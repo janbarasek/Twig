@@ -162,10 +162,10 @@ class ExpressionParser
         $parsers = new \ReflectionProperty($this->parser, 'parsers');
 
         if ('.' === $this->parser->getStream()->next()->getValue()) {
-            return $parsers->getValue($this->parser)->getInfixByClass(DotExpressionParser::class)->parse($this->parser, $node, $this->parser->getCurrentToken());
+            return $parsers->getValue($this->parser)->getByClass(DotExpressionParser::class)->parse($this->parser, $node, $this->parser->getCurrentToken());
         }
 
-        return $parsers->getValue($this->parser)->getInfixByClass(SquareBracketExpressionParser::class)->parse($this->parser, $node, $this->parser->getCurrentToken());
+        return $parsers->getValue($this->parser)->getByClass(SquareBracketExpressionParser::class)->parse($this->parser, $node, $this->parser->getCurrentToken());
     }
 
     /**
@@ -189,7 +189,7 @@ class ExpressionParser
 
         $parsers = new \ReflectionProperty($this->parser, 'parsers');
 
-        $op = $parsers->getValue($this->parser)->getInfixByClass(FilterExpressionParser::class);
+        $op = $parsers->getValue($this->parser)->getByClass(FilterExpressionParser::class);
         while (true) {
             $node = $op->parse($this->parser, $node, $this->parser->getCurrentToken());
             if (!$this->parser->getStream()->test(Token::OPERATOR_TYPE, '|')) {

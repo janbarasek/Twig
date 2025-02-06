@@ -16,6 +16,7 @@ use Twig\Error\SyntaxError;
 use Twig\ExpressionParser\ExpressionParserInterface;
 use Twig\ExpressionParser\ExpressionParsers;
 use Twig\ExpressionParser\ExpressionParserType;
+use Twig\ExpressionParser\InfixExpressionParserInterface;
 use Twig\ExpressionParser\Prefix\LiteralExpressionParser;
 use Twig\ExpressionParser\PrefixExpressionParserInterface;
 use Twig\Node\BlockNode;
@@ -357,16 +358,16 @@ class Parser
     public function parseExpression(int $precedence = 0): AbstractExpression
     {
         $token = $this->getCurrentToken();
-        if ($token->test(Token::OPERATOR_TYPE) && $ep = $this->parsers->getPrefix($token->getValue())) {
+        if ($token->test(Token::OPERATOR_TYPE) && $ep = $this->parsers->getByName(PrefixExpressionParserInterface::class, $token->getValue())) {
             $this->getStream()->next();
             $expr = $ep->parse($this, $token);
             $this->checkPrecedenceDeprecations($ep, $expr);
         } else {
-            $expr = $this->parsers->getPrefixByClass(LiteralExpressionParser::class)->parse($this, $token);
+            $expr = $this->parsers->getByClass(LiteralExpressionParser::class)->parse($this, $token);
         }
 
         $token = $this->getCurrentToken();
-        while ($token->test(Token::OPERATOR_TYPE) && ($ep = $this->parsers->getInfix($token->getValue())) && $ep->getPrecedence() >= $precedence) {
+        while ($token->test(Token::OPERATOR_TYPE) && ($ep = $this->parsers->getByName(InfixExpressionParserInterface::class, $token->getValue())) && $ep->getPrecedence() >= $precedence) {
             $this->getStream()->next();
             $expr = $ep->parse($this, $expr, $token);
             $this->checkPrecedenceDeprecations($ep, $expr);

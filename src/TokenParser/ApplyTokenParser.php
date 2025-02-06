@@ -35,7 +35,7 @@ final class ApplyTokenParser extends AbstractTokenParser
         $lineno = $token->getLine();
         $ref = new LocalVariable(null, $lineno);
         $filter = $ref;
-        $op = $this->parser->getEnvironment()->getExpressionParsers()->getInfixByClass(FilterExpressionParser::class);
+        $op = $this->parser->getEnvironment()->getExpressionParsers()->getByClass(FilterExpressionParser::class);
         while (true) {
             $filter = $op->parse($this->parser, $filter, $this->parser->getCurrentToken());
             if (!$this->parser->getStream()->test(Token::OPERATOR_TYPE, '|')) {
