@@ -20,7 +20,6 @@ use League\CommonMark\Extension\ExtensionInterface;
 final class LeagueCommonMarkConverterFactory
 {
     private $extensions;
-
     private $config;
 
     /**

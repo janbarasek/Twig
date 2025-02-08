@@ -1,5 +1,6 @@
 # 3.20.0 (2025-XX-XX)
 
+ * Add configuration for Commonmark
  * Fix wrong array index
  * Bump minimum PHP version to 8.1
  * Add support for registering callbacks for undefined functions, filters or token parsers in the IntegrationTestCase
