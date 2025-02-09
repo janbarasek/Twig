@@ -1,6 +1,6 @@
 # 3.20.0 (2025-XX-XX)
 
- * Fix support for ignoring syntax erros in an undefined handler in guard
+ * Fix support for ignoring syntax errors in an undefined handler in guard
  * Add configuration for Commonmark
  * Fix wrong array index
  * Bump minimum PHP version to 8.1
