@@ -5,6 +5,8 @@
  * Fix wrong array index
  * Bump minimum PHP version to 8.1
  * Add support for registering callbacks for undefined functions, filters or token parsers in the IntegrationTestCase
+ * Use correct line number for `ForElseNode`
+ * Fix timezone conversion on strings
 
 # 3.19.0 (2025-01-28)
 
