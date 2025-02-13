@@ -1,3 +1,7 @@
+# 3.20.1 (2025-XX-XX)
+
+ * n/a
+
 # 3.20.0 (2025-02-13)
 
  * Fix support for ignoring syntax errors in an undefined handler in guard
