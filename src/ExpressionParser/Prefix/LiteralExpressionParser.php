@@ -20,6 +20,7 @@ use Twig\Node\Expression\AbstractExpression;
 use Twig\Node\Expression\ArrayExpression;
 use Twig\Node\Expression\Binary\ConcatBinary;
 use Twig\Node\Expression\ConstantExpression;
+use Twig\Node\Expression\Unary\SpreadUnary;
 use Twig\Node\Expression\Variable\ContextVariable;
 use Twig\Parser;
 use Twig\Token;
@@ -174,13 +175,7 @@ final class LiteralExpressionParser extends AbstractExpressionParser implements 
             }
             $first = false;
 
-            if ($stream->nextIf(Token::SPREAD_TYPE)) {
-                $expr = $parser->parseExpression();
-                $expr->setAttribute('spread', true);
-                $node->addElement($expr);
-            } else {
-                $node->addElement($parser->parseExpression());
-            }
+            $node->addElement($parser->parseExpression());
         }
         $stream->expect(Token::PUNCTUATION_TYPE, ']', 'An opened sequence is not properly closed');
 
@@ -207,10 +202,9 @@ final class LiteralExpressionParser extends AbstractExpressionParser implements 
             }
             $first = false;
 
-            if ($stream->nextIf(Token::SPREAD_TYPE)) {
-                $value = $parser->parseExpression();
-                $value->setAttribute('spread', true);
-                $node->addElement($value);
+            if ($stream->test(Token::OPERATOR_TYPE, '...')) {
+                $node->addElement($parser->parseExpression());
+
                 continue;
             }
 

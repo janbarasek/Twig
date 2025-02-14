@@ -34,6 +34,9 @@ final class Token
      * @deprecated since Twig 3.21, "arrow" is now an operator
      */
     public const ARROW_TYPE = 12;
+    /**
+     * @deprecated since Twig 3.21, "spread" is now an operator
+     */
     public const SPREAD_TYPE = 13;
 
     public function __construct(
@@ -43,6 +46,9 @@ final class Token
     ) {
         if (self::ARROW_TYPE === $type) {
             trigger_deprecation('twig/twig', '3.21', 'The "%s" token type is deprecated, "arrow" is now an operator.', self::ARROW_TYPE);
+        }
+        if (self::SPREAD_TYPE === $type) {
+            trigger_deprecation('twig/twig', '3.21', 'The "%s" token type is deprecated, "spread" is now an operator.', self::SPREAD_TYPE);
         }
     }
 
@@ -73,6 +79,11 @@ final class Token
             trigger_deprecation('twig/twig', '3.21', 'The "%s" token type is deprecated, "arrow" is now an operator.', self::typeToEnglish(self::ARROW_TYPE));
 
             return self::OPERATOR_TYPE === $this->type && '=>' === $this->value;
+        }
+        if (self::SPREAD_TYPE === $type) {
+            trigger_deprecation('twig/twig', '3.21', 'The "%s" token type is deprecated, "spread" is now an operator.', self::typeToEnglish(self::SPREAD_TYPE));
+
+            return self::OPERATOR_TYPE === $this->type && '...' === $this->value;
         }
 
         $typeMatches = $this->type === $type;

@@ -2,7 +2,8 @@
 =========== ================ ======= ============= ===========
 Precedence  Operator         Type    Associativity Description
 =========== ================ ======= ============= ===========
-512 => 300  ``|``            infix   Left          Twig filter call
+512         ``...``          prefix  n/a           Spread operator
+ => 300     ``|``            infix   Left          Twig filter call
             ``(``                                  Twig function call
             ``.``                                  Get an attribute on a variable
             ``[``                                  Array access
@@ -56,7 +57,8 @@ Here is the same table for Twig 4.0 with adjusted precedences:
 =========== ================ ======= ============= ===========
 Precedence  Operator         Type    Associativity Description
 =========== ================ ======= ============= ===========
-512         ``(``            infix   Left          Twig function call
+512         ``...``          prefix  n/a           Spread operator
+            ``(``            infix   Left          Twig function call
             ``.``                                  Get an attribute on a variable
             ``[``                                  Array access
 500         ``-``            prefix  n/a

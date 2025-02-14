@@ -27,6 +27,7 @@ use Twig\Node\Expression\FilterExpression;
 use Twig\Node\Expression\FunctionExpression;
 use Twig\Node\Expression\TestExpression;
 use Twig\Node\Expression\Unary\AbstractUnary;
+use Twig\Node\Expression\Unary\SpreadUnary;
 use Twig\Node\Expression\Variable\ContextVariable;
 use Twig\Node\Node;
 use Twig\Parser;
@@ -193,7 +194,7 @@ class ExpressionParserTest extends TestCase
                     new ConstantExpression(2, 1),
 
                     new ConstantExpression(2, 1),
-                    self::createContextVariable('foo', ['spread' => true]),
+                    new SpreadUnary(new ContextVariable('foo', 1), 1),
                 ], 1)],
 
             // mapping with spread operator
@@ -206,7 +207,7 @@ class ExpressionParserTest extends TestCase
                     new ConstantExpression('c', 1),
 
                     new ConstantExpression(0, 1),
-                    self::createContextVariable('otherLetters', ['spread' => true]),
+                    new SpreadUnary(new ContextVariable('otherLetters', 1), 1),
                 ], 1)],
         ];
     }
@@ -589,16 +590,6 @@ class ExpressionParserTest extends TestCase
 
         $parser->parse($env->tokenize(new Source('{{ !false ? "OK" : "KO" }}', 'index')));
         $this->expectNotToPerformAssertions();
-    }
-
-    private static function createContextVariable(string $name, array $attributes): ContextVariable
-    {
-        $expression = new ContextVariable($name, 1);
-        foreach ($attributes as $key => $value) {
-            $expression->setAttribute($key, $value);
-        }
-
-        return $expression;
     }
 
     /**
