@@ -542,7 +542,6 @@ final class CoreExtension extends AbstractExtension
      * Returns a formatted string.
      *
      * @param string|null $format
-     * @param ...$values
      *
      * @internal
      */
@@ -1001,8 +1000,6 @@ final class CoreExtension extends AbstractExtension
      *
      * @param array|\Traversable|string|null $item
      *
-     * @return mixed
-     *
      * @internal
      */
     public static function shuffle(string $charset, $item)
@@ -1437,8 +1434,6 @@ final class CoreExtension extends AbstractExtension
      *        {# ... #}
      *    {% endif %}
      *
-     * @param mixed $value
-     *
      * @internal
      */
     public static function testSequence($value): bool
@@ -1461,8 +1456,6 @@ final class CoreExtension extends AbstractExtension
      *    {% if foo is mapping %}
      *        {# ... #}
      *    {% endif %}
-     *
-     * @param mixed $value
      *
      * @internal
      */
@@ -1613,10 +1606,10 @@ final class CoreExtension extends AbstractExtension
     {
         if (null !== $object) {
             if ('class' === $constant) {
-                return $checkDefined ? true : \get_class($object);
+                return $checkDefined ? true : $object::class;
             }
 
-            $constant = \get_class($object).'::'.$constant;
+            $constant = $object::class.'::'.$constant;
         }
 
         if (!\defined($constant)) {
@@ -1720,9 +1713,9 @@ final class CoreExtension extends AbstractExtension
                 }
 
                 if ($object instanceof \ArrayAccess) {
-                    $message = \sprintf('Key "%s" in object with ArrayAccess of class "%s" does not exist.', $arrayItem, \get_class($object));
+                    $message = \sprintf('Key "%s" in object with ArrayAccess of class "%s" does not exist.', $arrayItem, $object::class);
                 } elseif (\is_object($object)) {
-                    $message = \sprintf('Impossible to access a key "%s" on an object of class "%s" that does not implement ArrayAccess interface.', $item, \get_class($object));
+                    $message = \sprintf('Impossible to access a key "%s" on an object of class "%s" that does not implement ArrayAccess interface.', $item, $object::class);
                 } elseif (\is_array($object)) {
                     if (!$object) {
                         $message = \sprintf('Key "%s" does not exist as the sequence/mapping is empty.', $arrayItem);
@@ -1818,7 +1811,7 @@ final class CoreExtension extends AbstractExtension
 
         static $cache = [];
 
-        $class = \get_class($object);
+        $class = $object::class;
 
         // object method
         // precedence: getXxx() > isXxx() > hasXxx()

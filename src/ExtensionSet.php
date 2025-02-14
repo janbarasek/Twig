@@ -142,7 +142,7 @@ final class ExtensionSet
 
     public function addExtension(ExtensionInterface $extension): void
     {
-        $class = \get_class($extension);
+        $class = $extension::class;
 
         if ($this->initialized) {
             throw new \LogicException(\sprintf('Unable to register extension "%s" as extensions have already been initialized.', $class));
@@ -484,11 +484,11 @@ final class ExtensionSet
 
         $operators = $extension->getOperators();
         if (!\is_array($operators)) {
-            throw new \InvalidArgumentException(\sprintf('"%s::getOperators()" must return an array with operators, got "%s".', \get_class($extension), get_debug_type($operators).(\is_resource($operators) ? '' : '#'.$operators)));
+            throw new \InvalidArgumentException(\sprintf('"%s::getOperators()" must return an array with operators, got "%s".', $extension::class, get_debug_type($operators).(\is_resource($operators) ? '' : '#'.$operators)));
         }
 
         if (2 !== \count($operators)) {
-            throw new \InvalidArgumentException(\sprintf('"%s::getOperators()" must return an array of 2 elements, got %d.', \get_class($extension), \count($operators)));
+            throw new \InvalidArgumentException(\sprintf('"%s::getOperators()" must return an array of 2 elements, got %d.', $extension::class, \count($operators)));
         }
 
         $expressionParsers = [];

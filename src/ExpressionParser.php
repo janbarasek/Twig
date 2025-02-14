@@ -258,7 +258,7 @@ class ExpressionParser
             $name = null;
             if ($namedArguments && (($token = $stream->nextIf(Token::OPERATOR_TYPE, '=')) || (!$definition && $token = $stream->nextIf(Token::PUNCTUATION_TYPE, ':')))) {
                 if (!$value instanceof ContextVariable) {
-                    throw new SyntaxError(\sprintf('A parameter name must be a string, "%s" given.', \get_class($value)), $token->getLine(), $stream->getSourceContext());
+                    throw new SyntaxError(\sprintf('A parameter name must be a string, "%s" given.', $value::class), $token->getLine(), $stream->getSourceContext());
                 }
                 $name = $value->getAttribute('name');
 
