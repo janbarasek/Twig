@@ -36,16 +36,16 @@ use Twig\Node\Nodes;
  *
  * @author Fabien Potencier <fabien@symfony.com>
  *
- * @deprecated since Twig 3.20
+ * @deprecated since Twig 3.21
  */
 class ExpressionParser
 {
     /**
-     * @deprecated since Twig 3.20
+     * @deprecated since Twig 3.21
      */
     public const OPERATOR_LEFT = 1;
     /**
-     * @deprecated since Twig 3.20
+     * @deprecated since Twig 3.21
      */
     public const OPERATOR_RIGHT = 2;
 
@@ -53,7 +53,7 @@ class ExpressionParser
         private Parser $parser,
         private Environment $env,
     ) {
-        trigger_deprecation('twig/twig', '3.20', 'Class "%s" is deprecated, use "Parser::parseExpression()" instead.', __CLASS__);
+        trigger_deprecation('twig/twig', '3.21', 'Class "%s" is deprecated, use "Parser::parseExpression()" instead.', __CLASS__);
     }
 
     public function parseExpression($precedence = 0)
@@ -62,27 +62,27 @@ class ExpressionParser
             trigger_deprecation('twig/twig', '3.15', 'Passing a second argument ($allowArrow) to "%s()" is deprecated.', __METHOD__);
         }
 
-        trigger_deprecation('twig/twig', '3.20', 'The "%s()" method is deprecated, use "Parser::parseExpression()" instead.', __METHOD__);
+        trigger_deprecation('twig/twig', '3.21', 'The "%s()" method is deprecated, use "Parser::parseExpression()" instead.', __METHOD__);
 
         return $this->parser->parseExpression((int) $precedence);
     }
 
     /**
-     * @deprecated since Twig 3.20
+     * @deprecated since Twig 3.21
      */
     public function parsePrimaryExpression()
     {
-        trigger_deprecation('twig/twig', '3.20', 'The "%s()" method is deprecated.', __METHOD__);
+        trigger_deprecation('twig/twig', '3.21', 'The "%s()" method is deprecated.', __METHOD__);
 
         return $this->parseExpression();
     }
 
     /**
-     * @deprecated since Twig 3.20
+     * @deprecated since Twig 3.21
      */
     public function parseStringExpression()
     {
-        trigger_deprecation('twig/twig', '3.20', 'The "%s()" method is deprecated.', __METHOD__);
+        trigger_deprecation('twig/twig', '3.21', 'The "%s()" method is deprecated.', __METHOD__);
 
         return $this->parseExpression();
     }
@@ -98,11 +98,11 @@ class ExpressionParser
     }
 
     /**
-     * @deprecated since Twig 3.20
+     * @deprecated since Twig 3.21
      */
     public function parseSequenceExpression()
     {
-        trigger_deprecation('twig/twig', '3.20', 'The "%s()" method is deprecated.', __METHOD__);
+        trigger_deprecation('twig/twig', '3.21', 'The "%s()" method is deprecated.', __METHOD__);
 
         return $this->parseExpression();
     }
@@ -118,21 +118,21 @@ class ExpressionParser
     }
 
     /**
-     * @deprecated since Twig 3.20
+     * @deprecated since Twig 3.21
      */
     public function parseMappingExpression()
     {
-        trigger_deprecation('twig/twig', '3.20', 'The "%s()" method is deprecated.', __METHOD__);
+        trigger_deprecation('twig/twig', '3.21', 'The "%s()" method is deprecated.', __METHOD__);
 
         return $this->parseExpression();
     }
 
     /**
-     * @deprecated since Twig 3.20
+     * @deprecated since Twig 3.21
      */
     public function parsePostfixExpression($node)
     {
-        trigger_deprecation('twig/twig', '3.20', 'The "%s()" method is deprecated.', __METHOD__);
+        trigger_deprecation('twig/twig', '3.21', 'The "%s()" method is deprecated.', __METHOD__);
 
         while (true) {
             $token = $this->parser->getCurrentToken();
@@ -153,11 +153,11 @@ class ExpressionParser
     }
 
     /**
-     * @deprecated since Twig 3.20
+     * @deprecated since Twig 3.21
      */
     public function parseSubscriptExpression($node)
     {
-        trigger_deprecation('twig/twig', '3.20', 'The "%s()" method is deprecated.', __METHOD__);
+        trigger_deprecation('twig/twig', '3.21', 'The "%s()" method is deprecated.', __METHOD__);
 
         $parsers = new \ReflectionProperty($this->parser, 'parsers');
 
@@ -169,11 +169,11 @@ class ExpressionParser
     }
 
     /**
-     * @deprecated since Twig 3.20
+     * @deprecated since Twig 3.21
      */
     public function parseFilterExpression($node)
     {
-        trigger_deprecation('twig/twig', '3.20', 'The "%s()" method is deprecated.', __METHOD__);
+        trigger_deprecation('twig/twig', '3.21', 'The "%s()" method is deprecated.', __METHOD__);
 
         $this->parser->getStream()->next();
 
@@ -181,11 +181,11 @@ class ExpressionParser
     }
 
     /**
-     * @deprecated since Twig 3.20
+     * @deprecated since Twig 3.21
      */
     public function parseFilterExpressionRaw($node)
     {
-        trigger_deprecation('twig/twig', '3.20', 'The "%s()" method is deprecated.', __METHOD__);
+        trigger_deprecation('twig/twig', '3.21', 'The "%s()" method is deprecated.', __METHOD__);
 
         $parsers = new \ReflectionProperty($this->parser, 'parsers');
 
@@ -294,11 +294,11 @@ class ExpressionParser
     }
 
     /**
-     * @deprecated since Twig 3.20, use "AbstractTokenParser::parseAssignmentExpression()" instead
+     * @deprecated since Twig 3.21, use "AbstractTokenParser::parseAssignmentExpression()" instead
      */
     public function parseAssignmentExpression()
     {
-        trigger_deprecation('twig/twig', '3.20', 'The "%s()" method is deprecated, use "AbstractTokenParser::parseAssignmentExpression()" instead.', __METHOD__);
+        trigger_deprecation('twig/twig', '3.21', 'The "%s()" method is deprecated, use "AbstractTokenParser::parseAssignmentExpression()" instead.', __METHOD__);
 
         $stream = $this->parser->getStream();
         $targets = [];
@@ -321,11 +321,11 @@ class ExpressionParser
     }
 
     /**
-     * @deprecated since Twig 3.20
+     * @deprecated since Twig 3.21
      */
     public function parseMultitargetExpression()
     {
-        trigger_deprecation('twig/twig', '3.20', 'The "%s()" method is deprecated.', __METHOD__);
+        trigger_deprecation('twig/twig', '3.21', 'The "%s()" method is deprecated.', __METHOD__);
 
         $targets = [];
         while (true) {

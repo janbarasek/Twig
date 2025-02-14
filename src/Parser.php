@@ -342,11 +342,11 @@ class Parser
     }
 
     /**
-     * @deprecated since Twig 3.20
+     * @deprecated since Twig 3.21
      */
     public function getExpressionParser(): ExpressionParser
     {
-        trigger_deprecation('twig/twig', '3.20', 'Method "%s()" is deprecated, use "parseExpression()" instead.', __METHOD__);
+        trigger_deprecation('twig/twig', '3.21', 'Method "%s()" is deprecated, use "parseExpression()" instead.', __METHOD__);
 
         if (null === $this->expressionParser) {
             $this->expressionParser = new ExpressionParser($this, $this->env);

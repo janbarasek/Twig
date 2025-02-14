@@ -510,7 +510,7 @@ final class ExtensionSet
         }
 
         if (\count($expressionParsers)) {
-            trigger_deprecation('twig/twig', '3.20', \sprintf('Extension "%s" uses the old signature for "getOperators()", please implement "getExpressionParsers()" instead.', $extension::class));
+            trigger_deprecation('twig/twig', '3.21', \sprintf('Extension "%s" uses the old signature for "getOperators()", please implement "getExpressionParsers()" instead.', $extension::class));
 
             $this->expressionParsers->add($expressionParsers);
         }
@@ -518,7 +518,7 @@ final class ExtensionSet
 
     private function convertInfixExpressionParser(string $nodeClass, string $operator, int $precedence, InfixAssociativity $associativity, ?PrecedenceChange $precedenceChange, array $aliases, callable $callable): InfixExpressionParserInterface
     {
-        trigger_deprecation('twig/twig', '3.20', \sprintf('Using a non-ExpressionParserInterface object to define the "%s" binary operator is deprecated.', $operator));
+        trigger_deprecation('twig/twig', '3.21', \sprintf('Using a non-ExpressionParserInterface object to define the "%s" binary operator is deprecated.', $operator));
 
         return new class($nodeClass, $operator, $precedence, $associativity, $precedenceChange, $aliases, $callable) extends BinaryOperatorExpressionParser {
             public function __construct(

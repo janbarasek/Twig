@@ -16,7 +16,7 @@ separator using the additional arguments:
     {{ 9800.333|number_format(2, '.', ',') }}
 
 To format negative numbers, wrap the previous statement with parentheses (note
-that as of Twig 3.20, not using parentheses is deprecated as the filter
+that as of Twig 3.21, not using parentheses is deprecated as the filter
 operator will change precedence in Twig 4.0):
 
 .. code-block:: twig

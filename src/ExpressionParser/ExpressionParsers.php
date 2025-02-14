@@ -50,7 +50,7 @@ final class ExpressionParsers implements \IteratorAggregate
     {
         foreach ($parsers as $parser) {
             if ($parser->getPrecedence() > 512 || $parser->getPrecedence() < 0) {
-                trigger_deprecation('twig/twig', '3.20', 'Precedence for "%s" must be between 0 and 512, got %d.', $parser->getName(), $parser->getPrecedence());
+                trigger_deprecation('twig/twig', '3.21', 'Precedence for "%s" must be between 0 and 512, got %d.', $parser->getName(), $parser->getPrecedence());
                 // throw new \InvalidArgumentException(\sprintf('Precedence for "%s" must be between 0 and 512, got %d.', $parser->getName(), $parser->getPrecedence()));
             }
             $interface = $parser instanceof PrefixExpressionParserInterface ? PrefixExpressionParserInterface::class : InfixExpressionParserInterface::class;

@@ -75,7 +75,7 @@ final class FilterExpressionParser extends AbstractExpressionParser implements I
 
     public function getPrecedenceChange(): ?PrecedenceChange
     {
-        return new PrecedenceChange('twig/twig', '3.20', 300);
+        return new PrecedenceChange('twig/twig', '3.21', 300);
     }
 
     public function getAssociativity(): InfixAssociativity

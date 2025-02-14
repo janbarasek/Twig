@@ -31,7 +31,7 @@ final class Token
     public const INTERPOLATION_START_TYPE = 10;
     public const INTERPOLATION_END_TYPE = 11;
     /**
-     * @deprecated since Twig 3.20, "arrow" is now an operator
+     * @deprecated since Twig 3.21, "arrow" is now an operator
      */
     public const ARROW_TYPE = 12;
     public const SPREAD_TYPE = 13;
@@ -42,7 +42,7 @@ final class Token
         private int $lineno,
     ) {
         if (self::ARROW_TYPE === $type) {
-            trigger_deprecation('twig/twig', '3.20', 'The "%s" token type is deprecated, "arrow" is now an operator.', self::ARROW_TYPE);
+            trigger_deprecation('twig/twig', '3.21', 'The "%s" token type is deprecated, "arrow" is now an operator.', self::ARROW_TYPE);
         }
     }
 
@@ -70,7 +70,7 @@ final class Token
         }
 
         if (self::ARROW_TYPE === $type) {
-            trigger_deprecation('twig/twig', '3.20', 'The "%s" token type is deprecated, "arrow" is now an operator.', self::typeToEnglish(self::ARROW_TYPE));
+            trigger_deprecation('twig/twig', '3.21', 'The "%s" token type is deprecated, "arrow" is now an operator.', self::typeToEnglish(self::ARROW_TYPE));
 
             return self::OPERATOR_TYPE === $this->type && '=>' === $this->value;
         }
@@ -79,7 +79,7 @@ final class Token
         if ($typeMatches && self::PUNCTUATION_TYPE === $type && \in_array($this->value, ['(', '[', '|', '.', '?', '?:']) && $values) {
             foreach ((array) $values as $value) {
                 if (\in_array($value, ['(', '[', '|', '.', '?', '?:'])) {
-                    trigger_deprecation('twig/twig', '3.20', 'The "%s" token is now an "%s" token instead of a "%s" one.', $this->value, self::typeToEnglish(self::OPERATOR_TYPE), $this->toEnglish());
+                    trigger_deprecation('twig/twig', '3.21', 'The "%s" token is now an "%s" token instead of a "%s" one.', $this->value, self::typeToEnglish(self::OPERATOR_TYPE), $this->toEnglish());
 
                     break;
                 }

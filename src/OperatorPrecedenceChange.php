@@ -27,7 +27,7 @@ class OperatorPrecedenceChange extends PrecedenceChange
         private string $version,
         private int $newPrecedence,
     ) {
-        trigger_deprecation('twig/twig', '3.20', 'The "%s" class is deprecated since Twig 3.20. Use "%s" instead.', self::class, PrecedenceChange::class);
+        trigger_deprecation('twig/twig', '3.21', 'The "%s" class is deprecated since Twig 3.21. Use "%s" instead.', self::class, PrecedenceChange::class);
 
         parent::__construct($package, $version, $newPrecedence);
     }
