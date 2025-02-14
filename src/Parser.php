@@ -43,6 +43,7 @@ use Twig\Util\ReflectionCallable;
 class Parser
 {
     private $stack = [];
+    private ?\WeakMap $expressionRefs = null;
     private $stream;
     private $parent;
     private $visitors;
@@ -94,6 +95,7 @@ class Parser
         $this->blockStack = [];
         $this->importedSymbols = [[]];
         $this->embeddedTemplates = [];
+        $this->expressionRefs = new \WeakMap();
 
         try {
             $body = $this->subparse($test, $dropNeedle);
@@ -111,6 +113,8 @@ class Parser
             }
 
             throw $e;
+        } finally {
+            $this->expressionRefs = null;
         }
 
         $node = new ModuleNode(new BodyNode([$body]), $this->parent, new Nodes($this->blocks), new Nodes($this->macros), new Nodes($this->traits), $this->embeddedTemplates, $stream->getSourceContext());
@@ -557,7 +561,7 @@ class Parser
 
     private function checkPrecedenceDeprecations(ExpressionParserInterface $expressionParser, AbstractExpression $expr)
     {
-        $expr->setAttribute('expression_parser', $expressionParser);
+        $this->expressionRefs[$expr] = $expressionParser;
         $precedenceChanges = $this->parsers->getPrecedenceChanges();
 
         // Check that the all nodes that are between the 2 precedences have explicit parentheses
@@ -576,7 +580,7 @@ class Parser
                 if (!\in_array($expressionParser, $changes, true)) {
                     continue;
                 }
-                if ($node->hasAttribute('expression_parser') && $ep === $node->getAttribute('expression_parser')) {
+                if (isset($this->expressionRefs[$node]) && $ep === $this->expressionRefs[$node]) {
                     $change = $expressionParser->getPrecedenceChange();
                     trigger_deprecation($change->getPackage(), $change->getVersion(), \sprintf('As the "%s" %s operator will change its precedence in the next major version, add explicit parentheses to avoid behavior change in "%s" at line %d.', $expressionParser->getName(), ExpressionParserType::getType($expressionParser)->value, $this->getStream()->getSourceContext()->getName(), $node->getTemplateLine()));
                 }
@@ -586,7 +590,7 @@ class Parser
         foreach ($precedenceChanges[$expressionParser] as $ep) {
             foreach ($expr as $node) {
                 /** @var AbstractExpression $node */
-                if ($node->hasAttribute('expression_parser') && $ep === $node->getAttribute('expression_parser') && !$node->hasExplicitParentheses()) {
+                if (isset($this->expressionRefs[$node]) && $ep === $this->expressionRefs[$node] && !$node->hasExplicitParentheses()) {
                     $change = $ep->getPrecedenceChange();
                     trigger_deprecation($change->getPackage(), $change->getVersion(), \sprintf('As the "%s" %s operator will change its precedence in the next major version, add explicit parentheses to avoid behavior change in "%s" at line %d.', $ep->getName(), ExpressionParserType::getType($ep)->value, $this->getStream()->getSourceContext()->getName(), $node->getTemplateLine()));
                 }
