@@ -342,15 +342,10 @@ class Lexer
         // operators
         elseif (preg_match($this->regexes['operator'], $this->code, $match, 0, $this->cursor)) {
             $operator = preg_replace('/\s+/', ' ', $match[0]);
-            $type = Token::OPERATOR_TYPE;
-            // to be removed in 4.0
-            if (str_contains(self::PUNCTUATION, $operator)) {
-                $type = Token::PUNCTUATION_TYPE;
-            }
             if (in_array($operator, $this->openingBrackets)) {
                 $this->checkBrackets($operator);
             }
-            $this->pushToken($type, $operator);
+            $this->pushToken(Token::OPERATOR_TYPE, $operator);
             $this->moveCursor($match[0]);
         }
         // names
