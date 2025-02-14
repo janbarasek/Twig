@@ -18,6 +18,10 @@ use Twig\Cache\FilesystemCache;
 use Twig\Environment;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
+use Twig\ExpressionParser\Infix\BinaryOperatorExpressionParser;
+use Twig\ExpressionParser\InfixExpressionParserInterface;
+use Twig\ExpressionParser\Prefix\UnaryOperatorExpressionParser;
+use Twig\ExpressionParser\PrefixExpressionParserInterface;
 use Twig\Extension\AbstractExtension;
 use Twig\Extension\ExtensionInterface;
 use Twig\Extension\GlobalsInterface;
@@ -307,8 +311,8 @@ class EnvironmentTest extends TestCase
         $this->assertArrayHasKey('foo_filter', $twig->getFilters());
         $this->assertArrayHasKey('foo_function', $twig->getFunctions());
         $this->assertArrayHasKey('foo_test', $twig->getTests());
-        $this->assertArrayHasKey('foo_unary', $twig->getUnaryOperators());
-        $this->assertArrayHasKey('foo_binary', $twig->getBinaryOperators());
+        $this->assertNotNull($twig->getExpressionParsers()->getByName(PrefixExpressionParserInterface::class, 'foo_unary'));
+        $this->assertNotNull($twig->getExpressionParsers()->getByName(InfixExpressionParserInterface::class, 'foo_binary'));
         $this->assertArrayHasKey('foo_global', $twig->getGlobals());
         $visitors = $twig->getNodeVisitors();
         $found = false;
@@ -594,11 +598,11 @@ class EnvironmentTest_Extension extends AbstractExtension implements GlobalsInte
         ];
     }
 
-    public function getOperators(): array
+    public function getExpressionParsers(): array
     {
         return [
-            ['foo_unary' => ['precedence' => 0]],
-            ['foo_binary' => ['precedence' => 0]],
+            new UnaryOperatorExpressionParser('', 'foo_unary', 0),
+            new BinaryOperatorExpressionParser('', 'foo_binary', 0),
         ];
     }
 
