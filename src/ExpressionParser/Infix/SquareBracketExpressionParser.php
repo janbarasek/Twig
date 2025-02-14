@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
- namespace Twig\ExpressionParser\Infix;
+namespace Twig\ExpressionParser\Infix;
 
 use Twig\ExpressionParser\AbstractExpressionParser;
 use Twig\ExpressionParser\ExpressionParserDescriptionInterface;

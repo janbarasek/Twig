@@ -650,8 +650,8 @@ class ExpressionParserTest extends TestCase
                 yield "$op1 vs $op2" => ["{{ $e }}", "{{ (12 $op1 6) $op2 3 }}", $php];
             }
         }
-        yield '+ vs not in' => ['{{ 1 + 2 not in [3, 4] }}', '{{ (1 + 2) not in [3, 4] }}', eval("return !in_array(1 + 2, [3, 4]);")];
-        yield '+ vs in' => ['{{ 1 + 2 in [3, 4] }}', '{{ (1 + 2) in [3, 4] }}', eval("return in_array(1 + 2, [3, 4]);")];
+        yield '+ vs not in' => ['{{ 1 + 2 not in [3, 4] }}', '{{ (1 + 2) not in [3, 4] }}', eval('return !in_array(1 + 2, [3, 4]);')];
+        yield '+ vs in' => ['{{ 1 + 2 in [3, 4] }}', '{{ (1 + 2) in [3, 4] }}', eval('return in_array(1 + 2, [3, 4]);')];
         yield '+ vs matches' => ['{{ 1 + 2 matches "/^3$/" }}', '{{ (1 + 2) matches "/^3$/" }}', eval("return preg_match('/^3$/', 1 + 2);")];
 
         // ~ stronger than `starts with` `ends with`
@@ -668,17 +668,17 @@ class ExpressionParserTest extends TestCase
         yield '[] . vs unary -' => ['{{ -a["c"].d }}', '{{ -((a["c"]).d) }}', eval("\$a = ['c' => ['d' => 2]]; return -\$a['c']['d'];"), $context];
 
         // () stronger than anything else
-        yield '() vs unary -' => ['{{ -random(1, 1) + 3 }}', '{{ -(random(1, 1)) + 3 }}', eval("return -rand(1, 1) + 3;")];
+        yield '() vs unary -' => ['{{ -random(1, 1) + 3 }}', '{{ -(random(1, 1)) + 3 }}', eval('return -rand(1, 1) + 3;')];
 
         // + - stronger than |
-        yield '+ vs |' => ['{{ 10 + 2|length }}', '{{ 10 + (2|length) }}', eval("return 10 + strlen(2);"), $context];
+        yield '+ vs |' => ['{{ 10 + 2|length }}', '{{ 10 + (2|length) }}', eval('return 10 + strlen(2);'), $context];
 
         // - unary stronger than |
         // To be uncomment in Twig 4.0
-        //yield '- vs |' => ['{{ -1|abs }}', '{{ (-1)|abs }}', eval("return abs(-1);"), $context];
+        // yield '- vs |' => ['{{ -1|abs }}', '{{ (-1)|abs }}', eval("return abs(-1);"), $context];
 
         // ?? stronger than ()
-        //yield '?? vs ()' => ['{{ (1 ?? "a") }}', '{{ ((1 ?? "a")) }}', eval("return 1;")];
+        // yield '?? vs ()' => ['{{ (1 ?? "a") }}', '{{ ((1 ?? "a")) }}', eval("return 1;")];
     }
 }
 

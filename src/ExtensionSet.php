@@ -509,8 +509,8 @@ final class ExtensionSet
             }
         }
 
-        if (count($expressionParsers)) {
-            trigger_deprecation('twig/twig', '3.20', \sprintf('Extension "%s" uses the old signature for "getOperators()", please implement "getExpressionParsers()" instead.', \get_class($extension)));
+        if (\count($expressionParsers)) {
+            trigger_deprecation('twig/twig', '3.20', \sprintf('Extension "%s" uses the old signature for "getOperators()", please implement "getExpressionParsers()" instead.', $extension::class));
 
             $this->expressionParsers->add($expressionParsers);
         }

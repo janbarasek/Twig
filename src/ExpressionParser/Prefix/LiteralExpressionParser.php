@@ -41,11 +41,13 @@ final class LiteralExpressionParser extends AbstractExpressionParser implements 
                     case 'true':
                     case 'TRUE':
                         $this->type = 'constant';
+
                         return new ConstantExpression(true, $token->getLine());
 
                     case 'false':
                     case 'FALSE':
                         $this->type = 'constant';
+
                         return new ConstantExpression(false, $token->getLine());
 
                     case 'none':
@@ -53,10 +55,12 @@ final class LiteralExpressionParser extends AbstractExpressionParser implements 
                     case 'null':
                     case 'NULL':
                         $this->type = 'constant';
+
                         return new ConstantExpression(null, $token->getLine());
 
                     default:
                         $this->type = 'variable';
+
                         return new ContextVariable($token->getValue(), $token->getLine());
                 }
 

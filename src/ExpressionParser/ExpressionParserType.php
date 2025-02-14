@@ -19,7 +19,7 @@ enum ExpressionParserType: string
     case Prefix = 'prefix';
     case Infix = 'infix';
 
-    static public function getType(object $object): ExpressionParserType
+    public static function getType(object $object): ExpressionParserType
     {
         if ($object instanceof PrefixExpressionParserInterface) {
             return self::Prefix;
@@ -28,6 +28,6 @@ enum ExpressionParserType: string
             return self::Infix;
         }
 
-        throw new \InvalidArgumentException(\sprintf('Unsupported expression parser type: %s', \get_class($object)));
+        throw new \InvalidArgumentException(\sprintf('Unsupported expression parser type: %s', $object::class));
     }
 }

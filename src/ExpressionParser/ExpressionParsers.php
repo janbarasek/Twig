@@ -36,9 +36,8 @@ final class ExpressionParsers implements \IteratorAggregate
     /**
      * @param array<ExpressionParserInterface> $parsers
      */
-    public function __construct(
-        array $parsers = [],
-    ) {
+    public function __construct(array $parsers = [])
+    {
         $this->add($parsers);
     }
 
@@ -47,7 +46,7 @@ final class ExpressionParsers implements \IteratorAggregate
      *
      * @return $this
      */
-    public function add(array $parsers): self
+    public function add(array $parsers): static
     {
         foreach ($parsers as $parser) {
             if ($parser->getPrecedence() > 512 || $parser->getPrecedence() < 0) {
@@ -56,7 +55,7 @@ final class ExpressionParsers implements \IteratorAggregate
             }
             $interface = $parser instanceof PrefixExpressionParserInterface ? PrefixExpressionParserInterface::class : InfixExpressionParserInterface::class;
             $this->parsersByName[$interface][$parser->getName()] = $parser;
-            $this->parsersByClass[get_class($parser)] = $parser;
+            $this->parsersByClass[$parser::class] = $parser;
             foreach ($parser->getAliases() as $alias) {
                 $this->parsersByName[$interface][$alias] = $parser;
             }

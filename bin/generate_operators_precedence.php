@@ -16,9 +16,9 @@ use Twig\ExpressionParser\InfixAssociativity;
 use Twig\ExpressionParser\InfixExpressionParserInterface;
 use Twig\Loader\ArrayLoader;
 
-require_once dirname(__DIR__).'/vendor/autoload.php';
+require_once \dirname(__DIR__).'/vendor/autoload.php';
 
-$output = fopen(dirname(__DIR__).'/doc/operators_precedence.rst', 'w');
+$output = fopen(\dirname(__DIR__).'/doc/operators_precedence.rst', 'w');
 
 $twig = new Environment(new ArrayLoader([]));
 $expressionParsers = [];
@@ -28,7 +28,7 @@ foreach ($twig->getExpressionParsers() as $expressionParser) {
 
 fwrite($output, "\n=========== ================ ======= ============= ===========\n");
 fwrite($output, "Precedence  Operator         Type    Associativity Description\n");
-fwrite($output, "=========== ================ ======= ============= ===========");
+fwrite($output, '=========== ================ ======= ============= ===========');
 
 usort($expressionParsers, fn ($a, $b) => $b->getPrecedence() <=> $a->getPrecedence());
 
@@ -57,11 +57,12 @@ fwrite($output, "\nHere is the same table for Twig 4.0 with adjusted precedences
 
 fwrite($output, "\n=========== ================ ======= ============= ===========\n");
 fwrite($output, "Precedence  Operator         Type    Associativity Description\n");
-fwrite($output, "=========== ================ ======= ============= ===========");
+fwrite($output, '=========== ================ ======= ============= ===========');
 
-usort($expressionParsers, function($a, $b) {
+usort($expressionParsers, function ($a, $b) {
     $aPrecedence = $a->getPrecedenceChange() ? $a->getPrecedenceChange()->getNewPrecedence() : $a->getPrecedence();
     $bPrecedence = $b->getPrecedenceChange() ? $b->getPrecedenceChange()->getNewPrecedence() : $b->getPrecedence();
+
     return $bPrecedence - $aPrecedence;
 });
 
