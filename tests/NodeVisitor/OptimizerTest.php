@@ -13,18 +13,27 @@ namespace Twig\Tests\NodeVisitor;
 
 use PHPUnit\Framework\TestCase;
 use Twig\Environment;
-use Twig\Loader\LoaderInterface;
+use Twig\Loader\ArrayLoader;
 use Twig\Node\Expression\BlockReferenceExpression;
+use Twig\Node\Expression\NameExpression;
 use Twig\Node\Expression\ParentExpression;
 use Twig\Node\ForNode;
 use Twig\Node\Node;
+use Twig\NodeVisitor\OptimizerNodeVisitor;
 use Twig\Source;
 
 class OptimizerTest extends TestCase
 {
+    public function testConstructor()
+    {
+        $this->expectNotToPerformAssertions();
+
+        new OptimizerNodeVisitor(OptimizerNodeVisitor::OPTIMIZE_FOR);
+    }
+
     public function testRenderBlockOptimizer()
     {
-        $env = new Environment($this->createMock(LoaderInterface::class), ['cache' => false, 'autoescape' => false]);
+        $env = new Environment(new ArrayLoader(), ['cache' => false, 'autoescape' => false]);
 
         $stream = $env->parse($env->tokenize(new Source('{{ block("foo") }}', 'index')));
 
@@ -36,7 +45,7 @@ class OptimizerTest extends TestCase
 
     public function testRenderParentBlockOptimizer()
     {
-        $env = new Environment($this->createMock(LoaderInterface::class), ['cache' => false, 'autoescape' => false]);
+        $env = new Environment(new ArrayLoader(), ['cache' => false, 'autoescape' => false]);
 
         $stream = $env->parse($env->tokenize(new Source('{% extends "foo" %}{% block content %}{{ parent() }}{% endblock %}', 'index')));
 
@@ -46,21 +55,44 @@ class OptimizerTest extends TestCase
         $this->assertTrue($node->getAttribute('output'));
     }
 
-    /**
-     * @dataProvider getTestsForForOptimizer
-     */
-    public function testForOptimizer($template, $expected)
+    public function testForVarOptimizer()
     {
-        $env = new Environment($this->createMock(LoaderInterface::class), ['cache' => false]);
+        $env = new Environment(new ArrayLoader(), ['cache' => false, 'autoescape' => false]);
+
+        $template = '{% for i, j in foo %}{{ loop.index }}{{ i }}{{ j }}{% endfor %}';
+        $stream = $env->parse($env->tokenize(new Source($template, 'index')));
+
+        foreach (['loop', 'i', 'j'] as $target) {
+            $this->checkForVarConfiguration($stream, $target);
+        }
+    }
+
+    public function checkForVarConfiguration(Node $node, $target)
+    {
+        foreach ($node as $n) {
+            if (NameExpression::class === $n::class && $target === $n->getAttribute('name')) {
+                $this->assertTrue($n->getAttribute('always_defined'));
+            } else {
+                $this->checkForVarConfiguration($n, $target);
+            }
+        }
+    }
+
+    /**
+     * @dataProvider getTestsForForLoopOptimizer
+     */
+    public function testForLoopOptimizer($template, $expected)
+    {
+        $env = new Environment(new ArrayLoader(), ['cache' => false]);
 
         $stream = $env->parse($env->tokenize(new Source($template, 'index')));
 
         foreach ($expected as $target => $withLoop) {
-            $this->assertTrue($this->checkForConfiguration($stream, $target, $withLoop), sprintf('variable %s is %soptimized', $target, $withLoop ? 'not ' : ''));
+            $this->assertTrue($this->checkForLoopConfiguration($stream, $target, $withLoop), \sprintf('variable %s is %soptimized', $target, $withLoop ? 'not ' : ''));
         }
     }
 
-    public function getTestsForForOptimizer()
+    public static function getTestsForForLoopOptimizer()
     {
         return [
             ['{% for i in foo %}{% endfor %}', ['i' => false]],
@@ -99,7 +131,7 @@ class OptimizerTest extends TestCase
         ];
     }
 
-    public function checkForConfiguration(Node $node, $target, $withLoop)
+    public function checkForLoopConfiguration(Node $node, $target, $withLoop)
     {
         foreach ($node as $n) {
             if ($n instanceof ForNode) {
@@ -108,7 +140,7 @@ class OptimizerTest extends TestCase
                 }
             }
 
-            $ret = $this->checkForConfiguration($n, $target, $withLoop);
+            $ret = $this->checkForLoopConfiguration($n, $target, $withLoop);
             if (null !== $ret) {
                 return $ret;
             }

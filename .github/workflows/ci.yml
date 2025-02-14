@@ -3,8 +3,6 @@ name: "CI"
 on:
     pull_request:
     push:
-        branches:
-            - '3.x'
 
 env:
     SYMFONY_PHPUNIT_DISABLE_RESULT_CACHE: 1
@@ -21,10 +19,6 @@ jobs:
         strategy:
             matrix:
                 php-version:
-                    - '7.2.5'
-                    - '7.3'
-                    - '7.4'
-                    - '8.0'
                     - '8.1'
                     - '8.2'
                     - '8.3'
@@ -73,10 +67,6 @@ jobs:
         strategy:
             matrix:
                 php-version:
-                    - '7.2.5'
-                    - '7.3'
-                    - '7.4'
-                    - '8.0'
                     - '8.1'
                     - '8.2'
                     - '8.3'
@@ -114,12 +104,17 @@ jobs:
             - name: "PHPUnit version"
               run: vendor/bin/simple-phpunit --version
 
+            - name: "Prevent installing symfony/translation-contract 3.0"
+              if: "matrix.extension == 'twig-extra-bundle'"
+              working-directory: extra/${{ matrix.extension }}
+              run: "composer require --no-update 'symfony/translation-contracts:^1.1|^2.0'"
+
             - name: "Composer install ${{ matrix.extension }}"
               working-directory: extra/${{ matrix.extension }}
               run: composer install
 
             - name: "Switch use_yield to true"
-              if: "matrix.php == '8.2'"
+              if: "matrix.php-version == '8.2'"
               run: |
                   sed -i -e "s/'use_yield' => false/'use_yield' => true/" extra/${{ matrix.extension }}/vendor/twig/twig/src/Environment.php
 
@@ -157,3 +152,29 @@ jobs:
 
             - run: bash ./tests/drupal_test.sh
               shell: "bash"
+
+    phpstan:
+        name: "PHPStan"
+
+        runs-on: 'ubuntu-latest'
+
+        strategy:
+            matrix:
+                php-version:
+                    - '8.4'
+
+        steps:
+            - name: "Checkout code"
+              uses: actions/checkout@v4
+
+            - name: "Install PHP with extensions"
+              uses: shivammathur/setup-php@v2
+              with:
+                  coverage: "none"
+                  php-version: ${{ matrix.php-version }}
+                  ini-values: memory_limit=-1
+
+            - run: composer install
+
+            - name: "Run tests"
+              run: vendor/bin/phpstan

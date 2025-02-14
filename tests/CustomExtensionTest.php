@@ -14,24 +14,27 @@ namespace Twig\Tests;
 use PHPUnit\Framework\TestCase;
 use Twig\Environment;
 use Twig\Extension\ExtensionInterface;
-use Twig\Loader\LoaderInterface;
+use Twig\Loader\ArrayLoader;
 
 class CustomExtensionTest extends TestCase
 {
     /**
+     * @group legacy
+     *
      * @dataProvider provideInvalidExtensions
      */
     public function testGetInvalidOperators(ExtensionInterface $extension, $expectedExceptionMessage)
     {
+        $env = new Environment(new ArrayLoader());
+        $env->addExtension($extension);
+
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage($expectedExceptionMessage);
 
-        $env = new Environment($this->createMock(LoaderInterface::class));
-        $env->addExtension($extension);
-        $env->getUnaryOperators();
+        $env->getExpressionParsers();
     }
 
-    public function provideInvalidExtensions()
+    public static function provideInvalidExtensions()
     {
         return [
             [new InvalidOperatorExtension([1, 2, 3]), '"Twig\Tests\InvalidOperatorExtension::getOperators()" must return an array of 2 elements, got 3.'],

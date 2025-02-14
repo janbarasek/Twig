@@ -18,10 +18,15 @@ use Twig\Cache\FilesystemCache;
 use Twig\Environment;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
+use Twig\ExpressionParser\Infix\BinaryOperatorExpressionParser;
+use Twig\ExpressionParser\InfixExpressionParserInterface;
+use Twig\ExpressionParser\Prefix\UnaryOperatorExpressionParser;
+use Twig\ExpressionParser\PrefixExpressionParserInterface;
 use Twig\Extension\AbstractExtension;
 use Twig\Extension\ExtensionInterface;
 use Twig\Extension\GlobalsInterface;
 use Twig\Loader\ArrayLoader;
+use Twig\Loader\FilesystemLoader;
 use Twig\Loader\LoaderInterface;
 use Twig\Node\Node;
 use Twig\NodeVisitor\NodeVisitorInterface;
@@ -37,6 +42,21 @@ use Twig\TwigTest;
 class EnvironmentTest extends TestCase
 {
     use ExpectDeprecationTrait;
+
+    public function testVersionConstants()
+    {
+        $version = Environment::VERSION;
+        $exploded = explode('-', $version);
+        $this->assertEquals(Environment::EXTRA_VERSION, $exploded[1] ?? '');
+
+        $version = $exploded[0];
+        $exploded = explode('.', $version);
+        $this->assertEquals(Environment::MAJOR_VERSION, $exploded[0]);
+        $this->assertEquals(Environment::MINOR_VERSION, $exploded[1]);
+        $this->assertEquals(Environment::RELEASE_VERSION, $exploded[2]);
+
+        $this->assertEquals(Environment::VERSION_ID, Environment::MAJOR_VERSION * 10000 + Environment::MINOR_VERSION * 100 + Environment::RELEASE_VERSION);
+    }
 
     public function testAutoescapeOption()
     {
@@ -163,19 +183,26 @@ class EnvironmentTest extends TestCase
 
         // force compilation
         $twig = new Environment($loader = new ArrayLoader(['index' => '{{ foo }}']), $options);
+        $twig->addExtension($extension = new class extends AbstractExtension {
+            public bool $throw = false;
+
+            public function getFilters(): array
+            {
+                if ($this->throw) {
+                    throw new \RuntimeException('Extension are not supposed to be initialized.');
+                }
+
+                return parent::getFilters();
+            }
+        });
 
         $key = $cache->generateKey('index', $twig->getTemplateClass('index'));
         $cache->write($key, $twig->compileSource(new Source('{{ foo }}', 'index')));
 
         // check that extensions won't be initialized when rendering a template that is already in the cache
-        $twig = $this
-            ->getMockBuilder(Environment::class)
-            ->setConstructorArgs([$loader, $options])
-            ->setMethods(['initExtensions'])
-            ->getMock()
-        ;
-
-        $twig->expects($this->never())->method('initExtensions');
+        $twig = new Environment($loader, $options);
+        $extension->throw = true;
+        $twig->addExtension($extension);
 
         // render template
         $output = $twig->render('index', ['foo' => 'bar']);
@@ -269,7 +296,7 @@ class EnvironmentTest extends TestCase
 
     public function testHasGetExtensionByClassName()
     {
-        $twig = new Environment($this->createMock(LoaderInterface::class));
+        $twig = new Environment(new ArrayLoader());
         $twig->addExtension($ext = new EnvironmentTest_Extension());
         $this->assertSame($ext, $twig->getExtension(EnvironmentTest_Extension::class));
         $this->assertSame($ext, $twig->getExtension(EnvironmentTest_Extension::class));
@@ -277,15 +304,15 @@ class EnvironmentTest extends TestCase
 
     public function testAddExtension()
     {
-        $twig = new Environment($this->createMock(LoaderInterface::class));
+        $twig = new Environment(new ArrayLoader());
         $twig->addExtension(new EnvironmentTest_Extension());
 
         $this->assertArrayHasKey('test', $twig->getTokenParsers());
         $this->assertArrayHasKey('foo_filter', $twig->getFilters());
         $this->assertArrayHasKey('foo_function', $twig->getFunctions());
         $this->assertArrayHasKey('foo_test', $twig->getTests());
-        $this->assertArrayHasKey('foo_unary', $twig->getUnaryOperators());
-        $this->assertArrayHasKey('foo_binary', $twig->getBinaryOperators());
+        $this->assertNotNull($twig->getExpressionParsers()->getByName(PrefixExpressionParserInterface::class, 'foo_unary'));
+        $this->assertNotNull($twig->getExpressionParsers()->getByName(InfixExpressionParserInterface::class, 'foo_binary'));
         $this->assertArrayHasKey('foo_global', $twig->getGlobals());
         $visitors = $twig->getNodeVisitors();
         $found = false;
@@ -305,18 +332,18 @@ class EnvironmentTest extends TestCase
         $twig = new Environment($loader);
         $twig->addExtension($extension);
 
-        $this->assertInstanceOf(ExtensionInterface::class, $twig->getExtension(\get_class($extension)));
+        $this->assertInstanceOf(ExtensionInterface::class, $twig->getExtension($extension::class));
         $this->assertTrue($twig->isTemplateFresh('page', time()));
     }
 
     public function testOverrideExtension()
     {
+        $twig = new Environment(new ArrayLoader());
+        $twig->addExtension(new EnvironmentTest_Extension());
+
         $this->expectException(\LogicException::class);
         $this->expectExceptionMessage('Unable to register extension "Twig\Tests\EnvironmentTest_Extension" as it is already registered.');
 
-        $twig = new Environment($this->createMock(LoaderInterface::class));
-
-        $twig->addExtension(new EnvironmentTest_Extension());
         $twig->addExtension(new EnvironmentTest_Extension());
     }
 
@@ -334,7 +361,7 @@ class EnvironmentTest extends TestCase
             'func_string_named_args' => '{{ from_runtime_string(name="foo") }}',
         ]);
 
-        $twig = new Environment($loader);
+        $twig = new Environment($loader, ['autoescape' => false]);
         $twig->addExtension(new EnvironmentTest_ExtensionWithoutRuntime());
         $twig->addRuntimeLoader($runtimeLoader);
 
@@ -348,17 +375,18 @@ class EnvironmentTest extends TestCase
 
     public function testFailLoadTemplate()
     {
+        $template = 'testFailLoadTemplate.twig';
+        $twig = new Environment(new ArrayLoader([$template => false]));
+
         $this->expectException(RuntimeError::class);
         $this->expectExceptionMessage('Failed to load Twig template "testFailLoadTemplate.twig", index "112233": cache might be corrupted in "testFailLoadTemplate.twig".');
 
-        $template = 'testFailLoadTemplate.twig';
-        $twig = new Environment(new ArrayLoader([$template => false]));
         $twig->loadTemplate($twig->getTemplateClass($template), $template, 112233);
     }
 
     public function testUndefinedFunctionCallback()
     {
-        $twig = new Environment($this->createMock(LoaderInterface::class));
+        $twig = new Environment(new ArrayLoader());
         $twig->registerUndefinedFunctionCallback(function (string $name) {
             if ('dynamic' === $name) {
                 return new TwigFunction('dynamic', function () { return 'dynamic'; });
@@ -374,7 +402,7 @@ class EnvironmentTest extends TestCase
 
     public function testUndefinedFilterCallback()
     {
-        $twig = new Environment($this->createMock(LoaderInterface::class));
+        $twig = new Environment(new ArrayLoader());
         $twig->registerUndefinedFilterCallback(function (string $name) {
             if ('dynamic' === $name) {
                 return new TwigFilter('dynamic', function () { return 'dynamic'; });
@@ -390,7 +418,7 @@ class EnvironmentTest extends TestCase
 
     public function testUndefinedTokenParserCallback()
     {
-        $twig = new Environment($this->createMock(LoaderInterface::class));
+        $twig = new Environment(new ArrayLoader());
         $twig->registerUndefinedTokenParserCallback(function (string $name) {
             if ('dynamic' === $name) {
                 $parser = $this->createMock(TokenParserInterface::class);
@@ -414,23 +442,23 @@ class EnvironmentTest extends TestCase
      */
     public function testLegacyEchoingNode()
     {
-        $loader = new ArrayLoader(['echo_bar' => 'A{% set v %}B{% test %}C{% endset %}D{% test %}E{{ v }}F']);
+        $loader = new ArrayLoader(['echo_bar' => 'A{% set v %}B{% test %}C{% endset %}D{% test %}E{{ v }}F{% set w %}{% test %}{% endset %}G{{ w }}H']);
 
         $twig = new Environment($loader);
         $twig->addExtension(new EnvironmentTest_Extension());
 
         if ($twig->useYield()) {
             $this->expectException(SyntaxError::class);
-            $this->expectExceptionMessage('An exception has been thrown during the compilation of a template ("You cannot enable the "use_yield" option of Twig as node "Twig\Tests\EnvironmentTest_LegacyEchoingNode" is not marked as ready for it; please make it ready and then flag it with the #[YieldReady] attribute.") in "echo_bar".');
+            $this->expectExceptionMessage('An exception has been thrown during the compilation of a template ("You cannot enable the "use_yield" option of Twig as node "Twig\Tests\EnvironmentTest_LegacyEchoingNode" is not marked as ready for it; please make it ready and then flag it with the #[\Twig\Attribute\YieldReady] attribute.") in "echo_bar".');
         } else {
             $this->expectDeprecation(<<<'EOF'
-Since twig/twig 3.9: Twig node "Twig\Tests\EnvironmentTest_LegacyEchoingNode" is not marked as ready for using "yield" instead of "echo"; please make it ready and then flag it with the #[YieldReady] attribute.
-  Since twig/twig 3.9: Using "echo" is deprecated, use "yield" instead in "Twig\Tests\EnvironmentTest_LegacyEchoingNode", then flag the class with #[YieldReady].
+Since twig/twig 3.9: Twig node "Twig\Tests\EnvironmentTest_LegacyEchoingNode" is not marked as ready for using "yield" instead of "echo"; please make it ready and then flag it with the #[\Twig\Attribute\YieldReady] attribute.
+  Since twig/twig 3.9: Using "echo" is deprecated, use "yield" instead in "Twig\Tests\EnvironmentTest_LegacyEchoingNode", then flag the class with #[\Twig\Attribute\YieldReady].
 EOF
             );
         }
 
-        $this->assertSame('ADbarEBbarCF', $twig->render('echo_bar'));
+        $this->assertSame('ADbarEBbarCFGbarH', $twig->render('echo_bar'));
     }
 
     protected function getMockLoader($templateName, $templateContent)
@@ -446,6 +474,80 @@ EOF
           ->willReturn($templateName);
 
         return $loader;
+    }
+
+    public function testResettingGlobals()
+    {
+        $twig = new Environment(new ArrayLoader(['index' => '']));
+        $twig->addExtension(new class extends AbstractExtension implements GlobalsInterface {
+            public function getGlobals(): array
+            {
+                return [
+                    'global_ext' => bin2hex(random_bytes(16)),
+                ];
+            }
+        });
+
+        // Force extensions initialization
+        $twig->load('index');
+
+        // Simulate request
+        $g1 = $twig->getGlobals();
+        // Simulate another call from request 1 (the globals are cached)
+        $g2 = $twig->getGlobals();
+        $this->assertSame($g1['global_ext'], $g2['global_ext']);
+
+        // Simulate request 2
+        $twig->resetGlobals();
+        $g3 = $twig->getGlobals();
+        $this->assertNotSame($g3['global_ext'], $g2['global_ext']);
+    }
+
+    public function testHotCache()
+    {
+        $dir = sys_get_temp_dir().'/twig-hot-cache-test';
+        if (is_dir($dir)) {
+            FilesystemHelper::removeDir($dir);
+        }
+        mkdir($dir);
+        file_put_contents($dir.'/index.twig', 'x');
+        try {
+            $twig = new Environment(new FilesystemLoader($dir), [
+                'debug' => false,
+                'auto_reload' => false,
+                'cache' => $dir.'/cache',
+            ]);
+
+            // prime the cache
+            $this->assertSame('x', $twig->load('index.twig')->render([]));
+
+            // update the template
+            file_put_contents($dir.'/index.twig', 'y');
+
+            // re-render, should use the cached version
+            $this->assertSame('x', $twig->load('index.twig')->render([]));
+
+            // clear the cache
+            $twig->removeCache('index.twig');
+
+            // re-render, should use the updated template
+            $this->assertSame('y', $twig->load('index.twig')->render([]));
+
+            // the new template should not be cached
+            $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir.'/cache', \FilesystemIterator::SKIP_DOTS), \RecursiveIteratorIterator::CHILD_FIRST);
+            $count = 0;
+            foreach ($iterator as $fileInfo) {
+                if (!$fileInfo->isDir()) {
+                    ++$count;
+                }
+            }
+            $this->assertSame(0, $count);
+
+            // re-render, should use the updated template
+            $this->assertSame('y', $twig->load('index.twig')->render([]));
+        } finally {
+            FilesystemHelper::removeDir($dir);
+        }
     }
 }
 
@@ -496,11 +598,11 @@ class EnvironmentTest_Extension extends AbstractExtension implements GlobalsInte
         ];
     }
 
-    public function getOperators(): array
+    public function getExpressionParsers(): array
     {
         return [
-            ['foo_unary' => []],
-            ['foo_binary' => []],
+            new UnaryOperatorExpressionParser('', 'foo_unary', 0),
+            new BinaryOperatorExpressionParser('', 'foo_binary', 0),
         ];
     }
 
@@ -518,7 +620,7 @@ class EnvironmentTest_TokenParser extends AbstractTokenParser
     {
         $this->parser->getStream()->expect(Token::BLOCK_END_TYPE);
 
-        return new EnvironmentTest_LegacyEchoingNode();
+        return new EnvironmentTest_LegacyEchoingNode([], [], 1);
     }
 
     public function getTag(): string

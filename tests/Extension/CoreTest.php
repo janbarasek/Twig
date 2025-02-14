@@ -15,23 +15,65 @@ use PHPUnit\Framework\TestCase;
 use Twig\Environment;
 use Twig\Error\RuntimeError;
 use Twig\Extension\CoreExtension;
-use Twig\Loader\LoaderInterface;
+use Twig\Extension\SandboxExtension;
+use Twig\Loader\ArrayLoader;
+use Twig\Sandbox\SecurityError;
+use Twig\Sandbox\SecurityPolicy;
 
 class CoreTest extends TestCase
 {
+    /**
+     * @dataProvider provideCycleCases
+     */
+    public function testCycleFunction($values, $position, $expected)
+    {
+        $this->assertSame($expected, CoreExtension::cycle($values, $position));
+    }
+
+    public static function provideCycleCases()
+    {
+        return [
+            [[1, 2, 3], 0, 1],
+            [[1, 2, 3], 1, 2],
+            [[1, 2, 3], 2, 3],
+            [[1, 2, 3], 3, 1],
+            [[false, 0, null], 0, false],
+            [[false, 0, null], 1, 0],
+            [[false, 0, null], 2, null],
+
+            [[['a', 'b'], ['c', 'd']], 3, ['c', 'd']],
+        ];
+    }
+
+    /**
+     * @dataProvider provideCycleInvalidCases
+     */
+    public function testCycleFunctionThrowRuntimeError($values, mixed $position = null)
+    {
+        $this->expectException(RuntimeError::class);
+        CoreExtension::cycle($values, $position ?? 0);
+    }
+
+    public static function provideCycleInvalidCases()
+    {
+        return [
+            'empty' => [[]],
+            'non-countable' => [new class extends \ArrayObject {
+            }],
+        ];
+    }
+
     /**
      * @dataProvider getRandomFunctionTestData
      */
     public function testRandomFunction(array $expectedInArray, $value1, $value2 = null)
     {
-        $env = new Environment($this->createMock(LoaderInterface::class));
-
         for ($i = 0; $i < 100; ++$i) {
-            $this->assertTrue(\in_array(CoreExtension::random($env, $value1, $value2), $expectedInArray, true)); // assertContains() would not consider the type
+            $this->assertTrue(\in_array(CoreExtension::random('UTF-8', $value1, $value2), $expectedInArray, true)); // assertContains() would not consider the type
         }
     }
 
-    public function getRandomFunctionTestData()
+    public static function getRandomFunctionTestData()
     {
         return [
             'array' => [
@@ -85,45 +127,38 @@ class CoreTest extends TestCase
         $max = mt_getrandmax();
 
         for ($i = 0; $i < 100; ++$i) {
-            $val = CoreExtension::random(new Environment($this->createMock(LoaderInterface::class)));
+            $val = CoreExtension::random('UTF-8');
             $this->assertTrue(\is_int($val) && $val >= 0 && $val <= $max);
         }
     }
 
     public function testRandomFunctionReturnsAsIs()
     {
-        $this->assertSame('', CoreExtension::random(new Environment($this->createMock(LoaderInterface::class)), ''));
-        $this->assertSame('', CoreExtension::random(new Environment($this->createMock(LoaderInterface::class), ['charset' => null]), ''));
+        $this->assertSame('', CoreExtension::random('UTF-8', ''));
 
         $instance = new \stdClass();
-        $this->assertSame($instance, CoreExtension::random(new Environment($this->createMock(LoaderInterface::class)), $instance));
+        $this->assertSame($instance, CoreExtension::random('UTF-8', $instance));
     }
 
     public function testRandomFunctionOfEmptyArrayThrowsException()
     {
         $this->expectException(RuntimeError::class);
-        CoreExtension::random(new Environment($this->createMock(LoaderInterface::class)), []);
+        CoreExtension::random('UTF-8', []);
     }
 
     public function testRandomFunctionOnNonUTF8String()
     {
-        $twig = new Environment($this->createMock(LoaderInterface::class));
-        $twig->setCharset('ISO-8859-1');
-
         $text = iconv('UTF-8', 'ISO-8859-1', 'Äé');
         for ($i = 0; $i < 30; ++$i) {
-            $rand = CoreExtension::random($twig, $text);
+            $rand = CoreExtension::random('ISO-8859-1', $text);
             $this->assertTrue(\in_array(iconv('ISO-8859-1', 'UTF-8', $rand), ['Ä', 'é'], true));
         }
     }
 
     public function testReverseFilterOnNonUTF8String()
     {
-        $twig = new Environment($this->createMock(LoaderInterface::class));
-        $twig->setCharset('ISO-8859-1');
-
         $input = iconv('UTF-8', 'ISO-8859-1', 'Äé');
-        $output = iconv('ISO-8859-1', 'UTF-8', CoreExtension::reverseFilter($twig, $input));
+        $output = iconv('ISO-8859-1', 'UTF-8', CoreExtension::reverse('ISO-8859-1', $input));
 
         $this->assertEquals($output, 'éÄ');
     }
@@ -133,11 +168,10 @@ class CoreTest extends TestCase
      */
     public function testTwigFirst($expected, $input)
     {
-        $twig = new Environment($this->createMock(LoaderInterface::class));
-        $this->assertSame($expected, CoreExtension::first($twig, $input));
+        $this->assertSame($expected, CoreExtension::first('UTF-8', $input));
     }
 
-    public function provideTwigFirstCases()
+    public static function provideTwigFirstCases()
     {
         $i = [1 => 'a', 2 => 'b', 3 => 'c'];
 
@@ -155,11 +189,10 @@ class CoreTest extends TestCase
      */
     public function testTwigLast($expected, $input)
     {
-        $twig = new Environment($this->createMock(LoaderInterface::class));
-        $this->assertSame($expected, CoreExtension::last($twig, $input));
+        $this->assertSame($expected, CoreExtension::last('UTF-8', $input));
     }
 
-    public function provideTwigLastCases()
+    public static function provideTwigLastCases()
     {
         $i = [1 => 'a', 2 => 'b', 3 => 'c'];
 
@@ -177,10 +210,10 @@ class CoreTest extends TestCase
      */
     public function testArrayKeysFilter(array $expected, $input)
     {
-        $this->assertSame($expected, CoreExtension::getArrayKeysFilter($input));
+        $this->assertSame($expected, CoreExtension::keys($input));
     }
 
-    public function provideArrayKeyCases()
+    public static function provideArrayKeyCases()
     {
         $array = ['a' => 'a1', 'b' => 'b1', 'c' => 'c1'];
         $keys = array_keys($array);
@@ -203,7 +236,7 @@ class CoreTest extends TestCase
         $this->assertSame($expected, CoreExtension::inFilter($value, $compare));
     }
 
-    public function provideInFilterCases()
+    public static function provideInFilterCases()
     {
         $array = [1, 2, 'a' => 3, 5, 6, 7];
         $keys = array_keys($array);
@@ -228,11 +261,10 @@ class CoreTest extends TestCase
      */
     public function testSliceFilter($expected, $input, $start, $length = null, $preserveKeys = false)
     {
-        $twig = new Environment($this->createMock(LoaderInterface::class));
-        $this->assertSame($expected, CoreExtension::slice($twig, $input, $start, $length, $preserveKeys));
+        $this->assertSame($expected, CoreExtension::slice('UTF-8', $input, $start, $length, $preserveKeys));
     }
 
-    public function provideSliceFilterCases()
+    public static function provideSliceFilterCases()
     {
         $i = ['a' => 1, 'b' => 2, 'c' => 3, 'd' => 4];
         $keys = array_keys($i);
@@ -270,7 +302,7 @@ class CoreTest extends TestCase
         $this->assertSame(1, CoreExtension::compare('foo', \NAN));
     }
 
-    public function provideCompareCases()
+    public static function provideCompareCases()
     {
         return [
             [0, 'a', 'a'],
@@ -326,6 +358,45 @@ class CoreTest extends TestCase
             [0, 42, "42\f"],
             [1, 42, "\x00\x34\x32"],
         ];
+    }
+
+    public function testSandboxedInclude()
+    {
+        $twig = new Environment(new ArrayLoader([
+            'index' => '{{ include("included", sandboxed: true) }}',
+            'included' => '{{ "included"|e }}',
+        ]));
+        $policy = new SecurityPolicy(allowedFunctions: ['include']);
+        $sandbox = new SandboxExtension($policy, false);
+        $twig->addExtension($sandbox);
+
+        // We expect a compile error
+        $this->expectException(SecurityError::class);
+        $twig->render('index');
+    }
+
+    public function testSandboxedIncludeWithPreloadedTemplate()
+    {
+        $twig = new Environment(new ArrayLoader([
+            'index' => '{{ include("included", sandboxed: true) }}',
+            'included' => '{{ "included"|e }}',
+        ]));
+        $policy = new SecurityPolicy(allowedFunctions: ['include']);
+        $sandbox = new SandboxExtension($policy, false);
+        $twig->addExtension($sandbox);
+
+        // The template is loaded without the sandbox enabled
+        // so, no compile error
+        $twig->load('included');
+
+        // We expect a runtime error
+        $this->expectException(SecurityError::class);
+        $twig->render('index');
+    }
+
+    public function testLastModified()
+    {
+        $this->assertGreaterThan(1000000000, (new CoreExtension())->getLastModified());
     }
 }
 
@@ -401,7 +472,7 @@ final class CoreTestIterator implements \Iterator
     {
         ++$this->position;
         if ($this->position === $this->maxPosition) {
-            throw new \LogicException(sprintf('Code should not iterate beyond %d.', $this->maxPosition));
+            throw new \LogicException(\sprintf('Code should not iterate beyond %d.', $this->maxPosition));
         }
     }
 

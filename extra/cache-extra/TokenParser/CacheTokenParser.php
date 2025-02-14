@@ -13,8 +13,7 @@ namespace Twig\Extra\Cache\TokenParser;
 
 use Twig\Error\SyntaxError;
 use Twig\Extra\Cache\Node\CacheNode;
-use Twig\Node\Expression\ConstantExpression;
-use Twig\Node\Expression\FilterExpression;
+use Twig\Node\Expression\Filter\RawFilter;
 use Twig\Node\Node;
 use Twig\Node\PrintNode;
 use Twig\Token;
@@ -25,31 +24,32 @@ class CacheTokenParser extends AbstractTokenParser
     public function parse(Token $token): Node
     {
         $stream = $this->parser->getStream();
-        $expressionParser = $this->parser->getExpressionParser();
-        $key = $expressionParser->parseExpression();
+        $key = $this->parser->parseExpression();
 
         $ttl = null;
         $tags = null;
         while ($stream->test(Token::NAME_TYPE)) {
             $k = $stream->getCurrent()->getValue();
-            $stream->next();
-            $args = $expressionParser->parseArguments();
+            if (!\in_array($k, ['ttl', 'tags'])) {
+                throw new SyntaxError(\sprintf('Unknown "%s" configuration.', $k), $stream->getCurrent()->getLine(), $stream->getSourceContext());
+            }
 
-            switch ($k) {
-                case 'ttl':
-                    if (1 !== \count($args)) {
-                        throw new SyntaxError(sprintf('The "ttl" modifier takes exactly one argument (%d given).', \count($args)), $stream->getCurrent()->getLine(), $stream->getSourceContext());
-                    }
-                    $ttl = $args->getNode('0');
-                    break;
-                case 'tags':
-                    if (1 !== \count($args)) {
-                        throw new SyntaxError(sprintf('The "tags" modifier takes exactly one argument (%d given).', \count($args)), $stream->getCurrent()->getLine(), $stream->getSourceContext());
-                    }
-                    $tags = $args->getNode('0');
-                    break;
-                default:
-                    throw new SyntaxError(sprintf('Unknown "%s" configuration.', $k), $stream->getCurrent()->getLine(), $stream->getSourceContext());
+            $stream->next();
+            $stream->expect(Token::OPERATOR_TYPE, '(');
+            $line = $stream->getCurrent()->getLine();
+            if ($stream->test(Token::PUNCTUATION_TYPE, ')')) {
+                throw new SyntaxError(\sprintf('The "%s" modifier takes exactly one argument (0 given).', $k), $line, $stream->getSourceContext());
+            }
+            $arg = $this->parser->parseExpression();
+            if ($stream->test(Token::PUNCTUATION_TYPE, ',')) {
+                throw new SyntaxError(\sprintf('The "%s" modifier takes exactly one argument (2 given).', $k), $line, $stream->getSourceContext());
+            }
+            $stream->expect(Token::PUNCTUATION_TYPE, ')');
+
+            if ('ttl' === $k) {
+                $ttl = $arg;
+            } elseif ('tags' === $k) {
+                $tags = $arg;
             }
         }
 
@@ -57,10 +57,9 @@ class CacheTokenParser extends AbstractTokenParser
         $body = $this->parser->subparse([$this, 'decideCacheEnd'], true);
         $stream->expect(Token::BLOCK_END_TYPE);
 
-        $body = new CacheNode($key, $ttl, $tags, $body, $token->getLine(), $this->getTag());
-        $body = new FilterExpression($body, new ConstantExpression('raw', $token->getLine()), new Node(), $token->getLine());
+        $body = new CacheNode($key, $ttl, $tags, $body, $token->getLine());
 
-        return new PrintNode($body, $token->getLine(), $this->getTag());
+        return new PrintNode(new RawFilter($body), $token->getLine());
     }
 
     public function decideCacheEnd(Token $token): bool
