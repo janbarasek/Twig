@@ -17,20 +17,20 @@ use Twig\Error\RuntimeError;
 use Twig\Extension\CoreExtension;
 use Twig\Extension\SandboxExtension;
 use Twig\Loader\ArrayLoader;
-use Twig\Loader\LoaderInterface;
 use Twig\Sandbox\SecurityError;
 use Twig\Sandbox\SecurityPolicy;
 use Twig\Source;
 use Twig\Template;
+use Twig\TemplateWrapper;
 
 class TemplateTest extends TestCase
 {
     public function testDisplayBlocksAcceptTemplateOnlyAsBlocks()
     {
-        $this->expectException(\LogicException::class);
-
-        $twig = new Environment($this->createMock(LoaderInterface::class));
+        $twig = new Environment(new ArrayLoader());
         $template = new TemplateForTest($twig);
+
+        $this->expectException(\LogicException::class);
         $template->displayBlock('foo', [], ['foo' => [new \stdClass(), 'foo']]);
     }
 
@@ -57,26 +57,26 @@ class TemplateTest extends TestCase
             $template->render($context);
             $this->fail('Accessing an invalid attribute should throw an exception.');
         } catch (RuntimeError $e) {
-            $this->assertSame(sprintf($message, 'index'), $e->getMessage());
+            $this->assertSame(\sprintf($message, 'index'), $e->getMessage());
         }
     }
 
-    public function getAttributeExceptions()
+    public static function getAttributeExceptions()
     {
         return [
             ['{{ string["a"] }}', 'Impossible to access a key ("a") on a string variable ("foo") in "%s" at line 1.'],
             ['{{ null["a"] }}', 'Impossible to access a key ("a") on a null variable in "%s" at line 1.'],
-            ['{{ empty_array["a"] }}', 'Key "a" does not exist as the array is empty in "%s" at line 1.'],
-            ['{{ array["a"] }}', 'Key "a" for array with keys "foo" does not exist in "%s" at line 1.'],
+            ['{{ empty_array["a"] }}', 'Key "a" does not exist as the sequence/mapping is empty in "%s" at line 1.'],
+            ['{{ array["a"] }}', 'Key "a" for sequence/mapping with keys "foo" does not exist in "%s" at line 1.'],
             ['{{ array_access["a"] }}', 'Key "a" in object with ArrayAccess of class "Twig\Tests\TemplateArrayAccessObject" does not exist in "%s" at line 1.'],
             ['{{ string.a }}', 'Impossible to access an attribute ("a") on a string variable ("foo") in "%s" at line 1.'],
             ['{{ string.a() }}', 'Impossible to invoke a method ("a") on a string variable ("foo") in "%s" at line 1.'],
             ['{{ null.a }}', 'Impossible to access an attribute ("a") on a null variable in "%s" at line 1.'],
             ['{{ null.a() }}', 'Impossible to invoke a method ("a") on a null variable in "%s" at line 1.'],
-            ['{{ array.a() }}', 'Impossible to invoke a method ("a") on an array in "%s" at line 1.'],
-            ['{{ empty_array.a }}', 'Key "a" does not exist as the array is empty in "%s" at line 1.'],
-            ['{{ array.a }}', 'Key "a" for array with keys "foo" does not exist in "%s" at line 1.'],
-            ['{{ attribute(array, -10) }}', 'Key "-10" for array with keys "foo" does not exist in "%s" at line 1.'],
+            ['{{ array.a() }}', 'Impossible to invoke a method ("a") on a sequence/mapping in "%s" at line 1.'],
+            ['{{ empty_array.a }}', 'Key "a" does not exist as the sequence/mapping is empty in "%s" at line 1.'],
+            ['{{ array.a }}', 'Key "a" for sequence/mapping with keys "foo" does not exist in "%s" at line 1.'],
+            ['{{ array.(-10) }}', 'Key "-10" for sequence/mapping with keys "foo" does not exist in "%s" at line 1.'],
             ['{{ array_access.a }}', 'Neither the property "a" nor one of the methods "a()", "geta()"/"isa()"/"hasa()" or "__call()" exist and have public access in class "Twig\Tests\TemplateArrayAccessObject" in "%s" at line 1.'],
             ['{% from _self import foo %}{% macro foo(obj) %}{{ obj.missing_method() }}{% endmacro %}{{ foo(array_access) }}', 'Neither the property "missing_method" nor one of the methods "missing_method()", "getmissing_method()"/"ismissing_method()"/"hasmissing_method()" or "__call()" exist and have public access in class "Twig\Tests\TemplateArrayAccessObject" in "%s" at line 1.'],
             ['{{ magic_exception.test }}', 'An exception has been thrown during the rendering of a template ("Hey! Don\'t try to isset me!") in "%s" at line 1.'],
@@ -89,7 +89,7 @@ class TemplateTest extends TestCase
      */
     public function testGetAttributeWithSandbox($object, $item, $allowed)
     {
-        $twig = new Environment($this->createMock(LoaderInterface::class));
+        $twig = new Environment(new ArrayLoader());
         $policy = new SecurityPolicy([], [], [/* method */], [/* prop */], []);
         $twig->addExtension(new SandboxExtension($policy, !$allowed));
         $template = new TemplateForTest($twig);
@@ -113,7 +113,7 @@ class TemplateTest extends TestCase
         }
     }
 
-    public function getGetAttributeWithSandbox()
+    public static function getGetAttributeWithSandbox()
     {
         return [
             [new TemplatePropertyObject(), 'defined', false],
@@ -132,7 +132,7 @@ class TemplateTest extends TestCase
         $this->assertSame('', $twig->render('index'));
     }
 
-    public function getRenderTemplateWithoutOutputData()
+    public static function getRenderTemplateWithoutOutputData()
     {
         return [
             [''],
@@ -143,37 +143,40 @@ class TemplateTest extends TestCase
 
     public function testRenderBlockWithUndefinedBlock()
     {
+        $twig = new Environment(new ArrayLoader());
+        $template = new TemplateForTest($twig, 'index.twig');
+
         $this->expectException(RuntimeError::class);
         $this->expectExceptionMessage('Block "unknown" on template "index.twig" does not exist in "index.twig".');
 
-        $twig = new Environment($this->createMock(LoaderInterface::class));
-        $template = new TemplateForTest($twig, 'index.twig');
         $template->renderBlock('unknown', []);
     }
 
     public function testDisplayBlockWithUndefinedBlock()
     {
+        $twig = new Environment(new ArrayLoader());
+        $template = new TemplateForTest($twig, 'index.twig');
+
         $this->expectException(RuntimeError::class);
         $this->expectExceptionMessage('Block "unknown" on template "index.twig" does not exist in "index.twig".');
 
-        $twig = new Environment($this->createMock(LoaderInterface::class));
-        $template = new TemplateForTest($twig, 'index.twig');
         $template->displayBlock('unknown', []);
     }
 
     public function testDisplayBlockWithUndefinedParentBlock()
     {
+        $twig = new Environment(new ArrayLoader());
+        $template = new TemplateForTest($twig, 'parent.twig');
+
         $this->expectException(RuntimeError::class);
         $this->expectExceptionMessage('Block "foo" should not call parent() in "index.twig" as the block does not exist in the parent template "parent.twig"');
 
-        $twig = new Environment($this->createMock(LoaderInterface::class));
-        $template = new TemplateForTest($twig, 'parent.twig');
         $template->displayBlock('foo', [], ['foo' => [new TemplateForTest($twig, 'index.twig'), 'block_foo']], false);
     }
 
     public function testGetAttributeOnArrayWithConfusableKey()
     {
-        $twig = new Environment($this->createMock(LoaderInterface::class));
+        $twig = new Environment(new ArrayLoader());
         $template = new TemplateForTest($twig);
 
         $array = ['Zero', 'One', -1 => 'MinusOne', '' => 'EmptyString', '1.5' => 'FloatButString', '01' => 'IntegerButStringWithLeadingZeros'];
@@ -193,14 +196,14 @@ class TemplateTest extends TestCase
         $this->assertSame('IntegerButStringWithLeadingZeros', $array['01']);
         $this->assertSame('EmptyString', $array[null]);
 
-        $this->assertSame('Zero', CoreExtension::getAttribute($twig, $template->getSourceContext(), $array, false), 'false is treated as 0 when accessing an array (equals PHP behavior)');
-        $this->assertSame('One', CoreExtension::getAttribute($twig, $template->getSourceContext(), $array, true), 'true is treated as 1 when accessing an array (equals PHP behavior)');
-        $this->assertSame('One', CoreExtension::getAttribute($twig, $template->getSourceContext(), $array, 1.5), 'float is casted to int when accessing an array (equals PHP behavior)');
-        $this->assertSame('One', CoreExtension::getAttribute($twig, $template->getSourceContext(), $array, '1'), '"1" is treated as integer 1 when accessing an array (equals PHP behavior)');
-        $this->assertSame('MinusOne', CoreExtension::getAttribute($twig, $template->getSourceContext(), $array, -1.5), 'negative float is casted to int when accessing an array (equals PHP behavior)');
-        $this->assertSame('FloatButString', CoreExtension::getAttribute($twig, $template->getSourceContext(), $array, '1.5'), '"1.5" is treated as-is when accessing an array (equals PHP behavior)');
-        $this->assertSame('IntegerButStringWithLeadingZeros', CoreExtension::getAttribute($twig, $template->getSourceContext(), $array, '01'), '"01" is treated as-is when accessing an array (equals PHP behavior)');
-        $this->assertSame('EmptyString', CoreExtension::getAttribute($twig, $template->getSourceContext(), $array, null), 'null is treated as "" when accessing an array (equals PHP behavior)');
+        $this->assertSame('Zero', CoreExtension::getAttribute($twig, $template->getSourceContext(), $array, false), 'false is treated as 0 when accessing a sequence/mapping (equals PHP behavior)');
+        $this->assertSame('One', CoreExtension::getAttribute($twig, $template->getSourceContext(), $array, true), 'true is treated as 1 when accessing a sequence/mapping (equals PHP behavior)');
+        $this->assertSame('One', CoreExtension::getAttribute($twig, $template->getSourceContext(), $array, 1.5), 'float is casted to int when accessing a sequence/mapping (equals PHP behavior)');
+        $this->assertSame('One', CoreExtension::getAttribute($twig, $template->getSourceContext(), $array, '1'), '"1" is treated as integer 1 when accessing a sequence/mapping (equals PHP behavior)');
+        $this->assertSame('MinusOne', CoreExtension::getAttribute($twig, $template->getSourceContext(), $array, -1.5), 'negative float is casted to int when accessing a sequence/mapping (equals PHP behavior)');
+        $this->assertSame('FloatButString', CoreExtension::getAttribute($twig, $template->getSourceContext(), $array, '1.5'), '"1.5" is treated as-is when accessing a sequence/mapping (equals PHP behavior)');
+        $this->assertSame('IntegerButStringWithLeadingZeros', CoreExtension::getAttribute($twig, $template->getSourceContext(), $array, '01'), '"01" is treated as-is when accessing a sequence/mapping (equals PHP behavior)');
+        $this->assertSame('EmptyString', CoreExtension::getAttribute($twig, $template->getSourceContext(), $array, null), 'null is treated as "" when accessing a sequence/mapping (equals PHP behavior)');
     }
 
     /**
@@ -208,7 +211,7 @@ class TemplateTest extends TestCase
      */
     public function testGetAttribute($defined, $value, $object, $item, $arguments, $type)
     {
-        $twig = new Environment($this->createMock(LoaderInterface::class));
+        $twig = new Environment(new ArrayLoader());
         $template = new TemplateForTest($twig);
 
         $this->assertEquals($value, CoreExtension::getAttribute($twig, $template->getSourceContext(), $object, $item, $arguments, $type));
@@ -219,7 +222,7 @@ class TemplateTest extends TestCase
      */
     public function testGetAttributeStrict($defined, $value, $object, $item, $arguments, $type, $exceptionMessage = null)
     {
-        $twig = new Environment($this->createMock(LoaderInterface::class), ['strict_variables' => true]);
+        $twig = new Environment(new ArrayLoader(), ['strict_variables' => true]);
         $template = new TemplateForTest($twig);
 
         if ($defined) {
@@ -238,7 +241,7 @@ class TemplateTest extends TestCase
      */
     public function testGetAttributeDefined($defined, $value, $object, $item, $arguments, $type)
     {
-        $twig = new Environment($this->createMock(LoaderInterface::class));
+        $twig = new Environment(new ArrayLoader());
         $template = new TemplateForTest($twig);
 
         $this->assertEquals($defined, CoreExtension::getAttribute($twig, $template->getSourceContext(), $object, $item, $arguments, $type, true));
@@ -249,7 +252,7 @@ class TemplateTest extends TestCase
      */
     public function testGetAttributeDefinedStrict($defined, $value, $object, $item, $arguments, $type)
     {
-        $twig = new Environment($this->createMock(LoaderInterface::class), ['strict_variables' => true]);
+        $twig = new Environment(new ArrayLoader(), ['strict_variables' => true]);
         $template = new TemplateForTest($twig);
 
         $this->assertEquals($defined, CoreExtension::getAttribute($twig, $template->getSourceContext(), $object, $item, $arguments, $type, true));
@@ -257,7 +260,7 @@ class TemplateTest extends TestCase
 
     public function testGetAttributeCallExceptions()
     {
-        $twig = new Environment($this->createMock(LoaderInterface::class));
+        $twig = new Environment(new ArrayLoader());
         $template = new TemplateForTest($twig);
 
         $object = new TemplateMagicMethodExceptionObject();
@@ -265,7 +268,7 @@ class TemplateTest extends TestCase
         $this->assertNull(CoreExtension::getAttribute($twig, $template->getSourceContext(), $object, 'foo'));
     }
 
-    public function getGetAttributeTests()
+    public static function getGetAttributeTests()
     {
         $array = [
             'defined' => 'defined',
@@ -391,11 +394,15 @@ class TemplateTest extends TestCase
             [true, ['foo' => 'bar'], $arrayAccess, 'vars', [], $anyType],
         ]);
 
+        // test for Closure::__invoke()
+        $tests[] = [true, 'closure called', fn (): string => 'closure called', '__invoke', [], $anyType];
+        $tests[] = [true, 'closure called', fn (): string => 'closure called', '__invoke', [], $methodType];
+
         // tests when input is not an array or object
         $tests = array_merge($tests, [
-            [false, null, 42, 'a', [], $anyType, 'Impossible to access an attribute ("a") on a integer variable ("42") in "index.twig".'],
+            [false, null, 42, 'a', [], $anyType, 'Impossible to access an attribute ("a") on a int variable ("42") in "index.twig".'],
             [false, null, 'string', 'a', [], $anyType, 'Impossible to access an attribute ("a") on a string variable ("string") in "index.twig".'],
-            [false, null, [], 'a', [], $anyType, 'Key "a" does not exist as the array is empty in "index.twig".'],
+            [false, null, [], 'a', [], $anyType, 'Key "a" does not exist as the sequence/mapping is empty in "index.twig".'],
         ]);
 
         return $tests;
@@ -403,7 +410,7 @@ class TemplateTest extends TestCase
 
     public function testGetIsMethods()
     {
-        $twig = new Environment($this->createMock(LoaderInterface::class));
+        $twig = new Environment(new ArrayLoader());
 
         $getIsObject = new TemplateGetIsMethods();
         $template = new TemplateForTest($twig, 'index.twig');
@@ -444,27 +451,27 @@ class TemplateForTest extends Template
         return true;
     }
 
-    public function getTemplateName()
+    public function getTemplateName(): string
     {
         return $this->name;
     }
 
-    public function getDebugInfo()
+    public function getDebugInfo(): array
     {
         return [];
     }
 
-    public function getSourceContext()
+    public function getSourceContext(): Source
     {
         return new Source('', $this->getTemplateName());
     }
 
-    protected function doGetParent(array $context)
+    protected function doGetParent(array $context): bool|string|Template|TemplateWrapper
     {
         return false;
     }
 
-    protected function doDisplay(array $context, array $blocks = [])
+    protected function doDisplay(array $context, array $blocks = []): iterable
     {
     }
 
@@ -763,6 +770,6 @@ class TemplateMagicMethodExceptionObject
 {
     public function __call($method, $arguments)
     {
-        throw new \BadMethodCallException(sprintf('Unknown method "%s".', $method));
+        throw new \BadMethodCallException(\sprintf('Unknown method "%s".', $method));
     }
 }

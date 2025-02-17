@@ -12,6 +12,9 @@
 namespace Twig\Node\Expression;
 
 use Twig\Compiler;
+use Twig\Node\Expression\Unary\SpreadUnary;
+use Twig\Node\Expression\Unary\StringCastUnary;
+use Twig\Node\Expression\Variable\ContextVariable;
 
 class ArrayExpression extends AbstractExpression
 {
@@ -66,70 +69,37 @@ class ArrayExpression extends AbstractExpression
 
     public function compile(Compiler $compiler): void
     {
-        $keyValuePairs = $this->getKeyValuePairs();
-        $needsArrayMergeSpread = \PHP_VERSION_ID < 80100 && $this->hasSpreadItem($keyValuePairs);
-
-        if ($needsArrayMergeSpread) {
-            $compiler->raw('CoreExtension::arrayMerge(');
-        }
         $compiler->raw('[');
         $first = true;
-        $reopenAfterMergeSpread = false;
         $nextIndex = 0;
-        foreach ($keyValuePairs as $pair) {
-            if ($reopenAfterMergeSpread) {
-                $compiler->raw(', [');
-                $reopenAfterMergeSpread = false;
-            }
-
-            if ($needsArrayMergeSpread && $pair['value']->hasAttribute('spread')) {
-                $compiler->raw('], ')->subcompile($pair['value']);
-                $first = true;
-                $reopenAfterMergeSpread = true;
-                continue;
-            }
+        foreach ($this->getKeyValuePairs() as $pair) {
             if (!$first) {
                 $compiler->raw(', ');
             }
             $first = false;
 
-            if ($pair['value']->hasAttribute('spread') && !$needsArrayMergeSpread) {
-                $compiler->raw('...')->subcompile($pair['value']);
-                ++$nextIndex;
-            } else {
-                $key = $pair['key'] instanceof ConstantExpression ? $pair['key']->getAttribute('value') : null;
-
-                if ($nextIndex !== $key) {
-                    if (\is_int($key)) {
-                        $nextIndex = $key + 1;
-                    }
-                    $compiler
-                        ->subcompile($pair['key'])
-                        ->raw(' => ')
-                    ;
-                } else {
-                    ++$nextIndex;
-                }
-
-                $compiler->subcompile($pair['value']);
+            $key = null;
+            if ($pair['key'] instanceof ContextVariable) {
+                $pair['key'] = new StringCastUnary($pair['key'], $pair['key']->getTemplateLine());
             }
-        }
-        if (!$reopenAfterMergeSpread) {
-            $compiler->raw(']');
-        }
-        if ($needsArrayMergeSpread) {
-            $compiler->raw(')');
-        }
-    }
-
-    private function hasSpreadItem(array $pairs): bool
-    {
-        foreach ($pairs as $pair) {
-            if ($pair['value']->hasAttribute('spread')) {
-                return true;
+            if ($pair['key'] instanceof TempNameExpression) {
+                $key = $pair['key']->getAttribute('name');
+                $pair['key'] = new ConstantExpression($key, $pair['key']->getTemplateLine());
             }
-        }
+            if ($pair['key'] instanceof ConstantExpression) {
+                $key = $pair['key']->getAttribute('value');
+            }
 
-        return false;
+            if ($nextIndex !== $key && !$pair['value'] instanceof SpreadUnary) {
+                $compiler
+                    ->subcompile($pair['key'])
+                    ->raw(' => ')
+                ;
+            }
+            ++$nextIndex;
+
+            $compiler->subcompile($pair['value']);
+        }
+        $compiler->raw(']');
     }
 }

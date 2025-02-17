@@ -14,6 +14,7 @@ namespace Twig\Extra\Html;
 use Symfony\Component\Mime\MimeTypes;
 use Twig\Error\RuntimeError;
 use Twig\Extension\AbstractExtension;
+use Twig\Markup;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 
@@ -37,6 +38,7 @@ final class HtmlExtension extends AbstractExtension
     {
         return [
             new TwigFunction('html_classes', [self::class, 'htmlClasses']),
+            new TwigFunction('html_cva', [self::class, 'htmlCva']),
         ];
     }
 
@@ -75,7 +77,7 @@ final class HtmlExtension extends AbstractExtension
             $repr .= ';'.$key.'='.rawurlencode($value);
         }
 
-        if (0 === strpos($mime, 'text/')) {
+        if (str_starts_with($mime, 'text/')) {
             $repr .= ','.rawurlencode($data);
         } else {
             $repr .= ';base64,'.base64_encode($data);
@@ -91,12 +93,12 @@ final class HtmlExtension extends AbstractExtension
     {
         $classes = [];
         foreach ($args as $i => $arg) {
-            if (\is_string($arg)) {
-                $classes[] = $arg;
+            if (\is_string($arg) || $arg instanceof Markup) {
+                $classes[] = (string) $arg;
             } elseif (\is_array($arg)) {
                 foreach ($arg as $class => $condition) {
                     if (!\is_string($class)) {
-                        throw new RuntimeError(sprintf('The html_classes function argument %d (key %d) should be a string, got "%s".', $i, $class, \gettype($class)));
+                        throw new RuntimeError(\sprintf('The "html_classes" function argument %d (key %d) should be a string, got "%s".', $i, $class, get_debug_type($class)));
                     }
                     if (!$condition) {
                         continue;
@@ -104,10 +106,23 @@ final class HtmlExtension extends AbstractExtension
                     $classes[] = $class;
                 }
             } else {
-                throw new RuntimeError(sprintf('The html_classes function argument %d should be either a string or an array, got "%s".', $i, \gettype($arg)));
+                throw new RuntimeError(\sprintf('The "html_classes" function argument %d should be either a string or an array, got "%s".', $i, get_debug_type($arg)));
             }
         }
 
-        return implode(' ', array_unique($classes));
+        return implode(' ', array_unique(array_filter($classes, static function ($v) { return '' !== $v; })));
+    }
+
+    /**
+     * @param string|list<string|null> $base
+     * @param array<string, array<string, string|array<string>> $variants
+     * @param array<array<string, string|array<string>>> $compoundVariants
+     * @param array<string, string>                      $defaultVariant
+     *
+     * @internal
+     */
+    public static function htmlCva(array|string $base = [], array $variants = [], array $compoundVariants = [], array $defaultVariant = []): Cva
+    {
+        return new Cva($base, $variants, $compoundVariants, $defaultVariant);
     }
 }

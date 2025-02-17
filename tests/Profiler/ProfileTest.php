@@ -77,7 +77,16 @@ class ProfileTest extends TestCase
         usleep(1);
         $profile->leave();
 
-        $this->assertTrue($profile->getDuration() > 0, sprintf('Expected duration > 0, got: %f', $profile->getDuration()));
+        $this->assertTrue($profile->getDuration() > 0, \sprintf('Expected duration > 0, got: %f', $profile->getDuration()));
+    }
+
+    public function testTimeAccessors()
+    {
+        $current = microtime(true);
+        $profile = new Profile();
+
+        $this->assertEqualsWithDelta($current, $profile->getStartTime(), 1);
+        $this->assertSame(0.0, $profile->getEndTime());
     }
 
     public function testSerialize()

@@ -17,14 +17,14 @@ use Twig\Tests\FilesystemHelper;
 
 class FilesystemTest extends TestCase
 {
-    private $classname;
+    private $className;
     private $directory;
     private $cache;
 
     protected function setUp(): void
     {
-        $nonce = hash(\PHP_VERSION_ID < 80100 ? 'sha256' : 'xxh128', uniqid((string) mt_rand(), true));
-        $this->classname = '__Twig_Tests_Cache_FilesystemTest_Template_'.$nonce;
+        $nonce = hash(\PHP_VERSION_ID < 80100 ? 'sha256' : 'xxh128', random_bytes(32));
+        $this->className = '__Twig_Tests_Cache_FilesystemTest_Template_'.$nonce;
         $this->directory = sys_get_temp_dir().'/twig-test';
         $this->cache = new FilesystemCache($this->directory);
     }
@@ -43,25 +43,25 @@ class FilesystemTest extends TestCase
         $dir = \dirname($key);
         @mkdir($dir, 0777, true);
         $this->assertDirectoryExists($dir);
-        $this->assertFalse(class_exists($this->classname, false));
+        $this->assertFalse(class_exists($this->className, false));
 
         $content = $this->generateSource();
         file_put_contents($key, $content);
 
         $this->cache->load($key);
 
-        $this->assertTrue(class_exists($this->classname, false));
+        $this->assertTrue(class_exists($this->className, false));
     }
 
     public function testLoadMissing()
     {
         $key = $this->directory.'/cache/cachefile.php';
 
-        $this->assertFalse(class_exists($this->classname, false));
+        $this->assertFalse(class_exists($this->className, false));
 
         $this->cache->load($key);
 
-        $this->assertFalse(class_exists($this->classname, false));
+        $this->assertFalse(class_exists($this->className, false));
     }
 
     public function testWrite()
@@ -81,9 +81,6 @@ class FilesystemTest extends TestCase
 
     public function testWriteFailMkdir()
     {
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Unable to create the cache directory');
-
         if (\defined('PHP_WINDOWS_VERSION_BUILD')) {
             $this->markTestSkipped('Read-only directories not possible on Windows.');
         }
@@ -97,14 +94,14 @@ class FilesystemTest extends TestCase
         @mkdir($this->directory, 0555, true);
         $this->assertDirectoryExists($this->directory);
 
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unable to create the cache directory');
+
         $this->cache->write($key, $content);
     }
 
     public function testWriteFailDirWritable()
     {
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Unable to write in the cache directory');
-
         if (\defined('PHP_WINDOWS_VERSION_BUILD')) {
             $this->markTestSkipped('Read-only directories not possible on Windows.');
         }
@@ -120,14 +117,14 @@ class FilesystemTest extends TestCase
         @mkdir($this->directory.'/cache', 0555);
         $this->assertDirectoryExists($this->directory.'/cache');
 
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unable to write in the cache directory');
+
         $this->cache->write($key, $content);
     }
 
     public function testWriteFailWriteFile()
     {
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Failed to write cache file');
-
         $key = $this->directory.'/cache/cachefile.php';
         $content = $this->generateSource();
 
@@ -136,6 +133,9 @@ class FilesystemTest extends TestCase
         // Create a directory in the place of the cache file.
         @mkdir($key, 0777, true);
         $this->assertDirectoryExists($key);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Failed to write cache file');
 
         $this->cache->write($key, $content);
     }
@@ -171,7 +171,7 @@ class FilesystemTest extends TestCase
         $this->assertMatchesRegularExpression($expected, $cache->generateKey('_test_', static::class));
     }
 
-    public function provideDirectories()
+    public static function provideDirectories()
     {
         $pattern = '#a/b/[a-zA-Z0-9]+/[a-zA-Z0-9]+.php$#';
 
@@ -187,8 +187,8 @@ class FilesystemTest extends TestCase
 
     private function generateSource()
     {
-        return strtr('<?php class {{classname}} {}', [
-            '{{classname}}' => $this->classname,
+        return strtr('<?php class {{class_name}} {}', [
+            '{{class_name}}' => $this->className,
         ]);
     }
 }

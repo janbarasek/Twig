@@ -27,7 +27,7 @@ class FunctionalTest extends TestCase
     /**
      * @dataProvider getMarkdownTests
      */
-    public function testMarkdown(string $template, string $expected): void
+    public function testMarkdown(string $template, string $expected)
     {
         foreach ([LeagueMarkdown::class, ErusevMarkdown::class, /* MichelfMarkdown::class, */ DefaultMarkdown::class] as $class) {
             $twig = new Environment(new ArrayLoader([
@@ -37,7 +37,7 @@ Hello
 =====
 
 Great!
-EOF
+EOF,
             ]));
             $twig->addExtension(new MarkdownExtension());
             $twig->addRuntimeLoader(new class($class) implements RuntimeLoaderInterface {
@@ -48,18 +48,16 @@ EOF
                     $this->class = $class;
                 }
 
-                public function load($c)
+                public function load(string $c): ?object
                 {
-                    if (MarkdownRuntime::class === $c) {
-                        return new $c(new $this->class());
-                    }
+                    return MarkdownRuntime::class === $c ? new $c(new $this->class()) : null;
                 }
             });
             $this->assertMatchesRegularExpression('{'.$expected.'}m', trim($twig->render('index')));
         }
     }
 
-    public function getMarkdownTests()
+    public static function getMarkdownTests()
     {
         return [
             [<<<EOF
@@ -70,7 +68,7 @@ Hello
 Great!
 {% endapply %}
 EOF
-            , "<h1>Hello</h1>\n+<p>Great!</p>"],
+                , "<h1>Hello</h1>\n+<p>Great!</p>"],
             [<<<EOF
 {% apply markdown_to_html %}
     Hello
@@ -79,7 +77,7 @@ EOF
     Great!
 {% endapply %}
 EOF
-            , "<h1>Hello</h1>\n+<p>Great!</p>"],
+                , "<h1>Hello</h1>\n+<p>Great!</p>"],
             ["{{ include('html')|markdown_to_html }}", "<h1>Hello</h1>\n+<p>Great!</p>"],
         ];
     }

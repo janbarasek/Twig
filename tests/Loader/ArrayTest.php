@@ -19,10 +19,9 @@ class ArrayTest extends TestCase
 {
     public function testGetSourceContextWhenTemplateDoesNotExist()
     {
+        $loader = new ArrayLoader();
+
         $this->expectException(LoaderError::class);
-
-        $loader = new ArrayLoader([]);
-
         $loader->getSourceContext('foo');
     }
 
@@ -57,16 +56,15 @@ class ArrayTest extends TestCase
 
     public function testGetCacheKeyWhenTemplateDoesNotExist()
     {
+        $loader = new ArrayLoader();
+
         $this->expectException(LoaderError::class);
-
-        $loader = new ArrayLoader([]);
-
         $loader->getCacheKey('foo');
     }
 
     public function testSetTemplate()
     {
-        $loader = new ArrayLoader([]);
+        $loader = new ArrayLoader();
         $loader->setTemplate('foo', 'bar');
 
         $this->assertEquals('bar', $loader->getSourceContext('foo')->getCode());
@@ -80,10 +78,9 @@ class ArrayTest extends TestCase
 
     public function testIsFreshWhenTemplateDoesNotExist()
     {
+        $loader = new ArrayLoader();
+
         $this->expectException(LoaderError::class);
-
-        $loader = new ArrayLoader([]);
-
         $loader->isFresh('foo', time());
     }
 }

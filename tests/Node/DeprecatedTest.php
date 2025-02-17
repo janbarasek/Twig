@@ -11,13 +11,15 @@ namespace Twig\Tests\Node;
  * file that was distributed with this source code.
  */
 
+use Twig\Compiler;
 use Twig\Environment;
-use Twig\Loader\LoaderInterface;
+use Twig\Loader\ArrayLoader;
 use Twig\Node\DeprecatedNode;
+use Twig\Node\EmptyNode;
 use Twig\Node\Expression\ConstantExpression;
 use Twig\Node\Expression\FunctionExpression;
 use Twig\Node\IfNode;
-use Twig\Node\Node;
+use Twig\Node\Nodes;
 use Twig\Source;
 use Twig\Test\NodeTestCase;
 use Twig\TwigFunction;
@@ -32,53 +34,63 @@ class DeprecatedTest extends NodeTestCase
         $this->assertEquals($expr, $node->getNode('expr'));
     }
 
-    public function getTests()
+    public static function provideTests(): iterable
     {
         $tests = [];
 
         $expr = new ConstantExpression('This section is deprecated', 1);
-        $node = new DeprecatedNode($expr, 1, 'deprecated');
+        $node = new DeprecatedNode($expr, 1);
         $node->setSourceContext(new Source('', 'foo.twig'));
+        $node->setNode('package', new ConstantExpression('twig/twig', 1));
+        $node->setNode('version', new ConstantExpression('1.1', 1));
 
         $tests[] = [$node, <<<EOF
 // line 1
-@trigger_error("This section is deprecated"." (\"foo.twig\" at line 1).", E_USER_DEPRECATED);
+trigger_deprecation("twig/twig", "1.1", "This section is deprecated"." in \"foo.twig\" at line 1.");
 EOF
         ];
 
-        $t = new Node([
+        $t = new Nodes([
             new ConstantExpression(true, 1),
-            new DeprecatedNode($expr, 2, 'deprecated'),
-        ], [], 1);
+            $dep = new DeprecatedNode($expr, 2),
+        ], 1);
         $node = new IfNode($t, null, 1);
         $node->setSourceContext(new Source('', 'foo.twig'));
+        $dep->setNode('package', new ConstantExpression('twig/twig', 1));
+        $dep->setNode('version', new ConstantExpression('1.1', 1));
 
         $tests[] = [$node, <<<EOF
 // line 1
 if (true) {
     // line 2
-    @trigger_error("This section is deprecated"." (\"foo.twig\" at line 2).", E_USER_DEPRECATED);
+    trigger_deprecation("twig/twig", "1.1", "This section is deprecated"." in \"foo.twig\" at line 2.");
 }
 EOF
         ];
 
-        $environment = new Environment($this->createMock(LoaderInterface::class));
-        $environment->addFunction(new TwigFunction('foo', 'foo', []));
+        $environment = new Environment(new ArrayLoader());
+        $environment->addFunction($function = new TwigFunction('foo', 'Twig\Tests\Node\foo', []));
 
-        $expr = new FunctionExpression('foo', new Node(), 1);
-        $node = new DeprecatedNode($expr, 1, 'deprecated');
+        $expr = new FunctionExpression($function, new EmptyNode(), 1);
+        $node = new DeprecatedNode($expr, 1);
         $node->setSourceContext(new Source('', 'foo.twig'));
+        $node->setNode('package', new ConstantExpression('twig/twig', 1));
+        $node->setNode('version', new ConstantExpression('1.1', 1));
 
-        $compiler = $this->getCompiler($environment);
+        $compiler = new Compiler($environment);
         $varName = $compiler->getVarName();
 
         $tests[] = [$node, <<<EOF
 // line 1
-\$$varName = foo();
-@trigger_error(\$$varName." (\"foo.twig\" at line 1).", E_USER_DEPRECATED);
+\$$varName = Twig\Tests\Node\\foo();
+trigger_deprecation("twig/twig", "1.1", \$$varName." in \"foo.twig\" at line 1.");
 EOF
-        , $environment];
+            , $environment];
 
         return $tests;
     }
+}
+
+function foo()
+{
 }

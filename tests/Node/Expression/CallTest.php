@@ -13,49 +13,58 @@ namespace Twig\Tests\Node\Expression;
 
 use PHPUnit\Framework\TestCase;
 use Twig\Error\SyntaxError;
-use Twig\Node\Expression\CallExpression;
+use Twig\Node\EmptyNode;
+use Twig\Node\Expression\FunctionExpression;
+use Twig\TwigFunction;
 
+/**
+ * @group legacy
+ */
 class CallTest extends TestCase
 {
     public function testGetArguments()
     {
-        $node = new Node_Expression_Call([], ['type' => 'function', 'name' => 'date']);
+        $node = $this->createFunctionExpression('date', 'date');
         $this->assertEquals(['U', null], $this->getArguments($node, ['date', ['format' => 'U', 'timestamp' => null]]));
     }
 
     public function testGetArgumentsWhenPositionalArgumentsAfterNamedArguments()
     {
+        $node = $this->createFunctionExpression('date', 'date');
+
         $this->expectException(SyntaxError::class);
         $this->expectExceptionMessage('Positional arguments cannot be used after named arguments for function "date".');
 
-        $node = new Node_Expression_Call([], ['type' => 'function', 'name' => 'date']);
         $this->getArguments($node, ['date', ['timestamp' => 123456, 'Y-m-d']]);
     }
 
     public function testGetArgumentsWhenArgumentIsDefinedTwice()
     {
+        $node = $this->createFunctionExpression('date', 'date');
+
         $this->expectException(SyntaxError::class);
         $this->expectExceptionMessage('Argument "format" is defined twice for function "date".');
 
-        $node = new Node_Expression_Call([], ['type' => 'function', 'name' => 'date']);
         $this->getArguments($node, ['date', ['Y-m-d', 'format' => 'U']]);
     }
 
     public function testGetArgumentsWithWrongNamedArgumentName()
     {
+        $node = $this->createFunctionExpression('date', 'date');
+
         $this->expectException(SyntaxError::class);
         $this->expectExceptionMessage('Unknown argument "unknown" for function "date(format, timestamp)".');
 
-        $node = new Node_Expression_Call([], ['type' => 'function', 'name' => 'date']);
         $this->getArguments($node, ['date', ['Y-m-d', 'timestamp' => null, 'unknown' => '']]);
     }
 
     public function testGetArgumentsWithWrongNamedArgumentNames()
     {
+        $node = $this->createFunctionExpression('date', 'date');
+
         $this->expectException(SyntaxError::class);
         $this->expectExceptionMessage('Unknown arguments "unknown1", "unknown2" for function "date(format, timestamp)".');
 
-        $node = new Node_Expression_Call([], ['type' => 'function', 'name' => 'date']);
         $this->getArguments($node, ['date', ['Y-m-d', 'timestamp' => null, 'unknown1' => '', 'unknown2' => '']]);
     }
 
@@ -65,41 +74,64 @@ class CallTest extends TestCase
             $this->markTestSkipped('substr_compare() has a default value in 8.0, so the test does not work anymore, one should find another PHP built-in function for this test to work in PHP 8.');
         }
 
+        $node = $this->createFunctionExpression('substr_compare', 'substr_compare');
+
         $this->expectException(SyntaxError::class);
         $this->expectExceptionMessage('Argument "case_sensitivity" could not be assigned for function "substr_compare(main_str, str, offset, length, case_sensitivity)" because it is mapped to an internal PHP function which cannot determine default value for optional argument "length".');
 
-        $node = new Node_Expression_Call([], ['type' => 'function', 'name' => 'substr_compare']);
         $this->getArguments($node, ['substr_compare', ['abcd', 'bc', 'offset' => 1, 'case_sensitivity' => true]]);
     }
 
     public function testResolveArgumentsOnlyNecessaryArgumentsForCustomFunction()
     {
-        $node = new Node_Expression_Call([], ['type' => 'function', 'name' => 'custom_function']);
-
+        $node = $this->createFunctionExpression('custom_function', [$this, 'customFunction']);
         $this->assertEquals(['arg1'], $this->getArguments($node, [[$this, 'customFunction'], ['arg1' => 'arg1']]));
     }
 
     public function testGetArgumentsForStaticMethod()
     {
-        $node = new Node_Expression_Call([], ['type' => 'function', 'name' => 'custom_static_function']);
+        $node = $this->createFunctionExpression('custom_static_function', __CLASS__.'::customStaticFunction');
         $this->assertEquals(['arg1'], $this->getArguments($node, [__CLASS__.'::customStaticFunction', ['arg1' => 'arg1']]));
     }
 
     public function testResolveArgumentsWithMissingParameterForArbitraryArguments()
     {
+        $node = $this->createFunctionExpression('foo', [$this, 'customFunctionWithArbitraryArguments'], true);
+
         $this->expectException(\LogicException::class);
         $this->expectExceptionMessage('The last parameter of "Twig\\Tests\\Node\\Expression\\CallTest::customFunctionWithArbitraryArguments" for function "foo" must be an array with default value, eg. "array $arg = []".');
 
-        $node = new Node_Expression_Call([], ['type' => 'function', 'name' => 'foo', 'is_variadic' => true]);
         $this->getArguments($node, [[$this, 'customFunctionWithArbitraryArguments'], []]);
     }
 
     public function testGetArgumentsWithInvalidCallable()
     {
+        $node = $this->createFunctionExpression('foo', '<not-a-callable>', true);
+
         $this->expectException(\LogicException::class);
         $this->expectExceptionMessage('Callback for function "foo" is not callable in the current scope.');
-        $node = new Node_Expression_Call([], ['type' => 'function', 'name' => 'foo', 'is_variadic' => true]);
+
         $this->getArguments($node, ['<not-a-callable>', []]);
+    }
+
+    public function testResolveArgumentsWithMissingParameterForArbitraryArgumentsOnFunction()
+    {
+        $node = $this->createFunctionExpression('foo', 'Twig\Tests\Node\Expression\custom_call_test_function', true);
+
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessageMatches('#^The last parameter of "Twig\\\\Tests\\\\Node\\\\Expression\\\\custom_call_test_function" for function "foo" must be an array with default value, eg\\. "array \\$arg \\= \\[\\]"\\.$#');
+
+        $this->getArguments($node, ['Twig\Tests\Node\Expression\custom_call_test_function', []]);
+    }
+
+    public function testResolveArgumentsWithMissingParameterForArbitraryArgumentsOnObject()
+    {
+        $node = $this->createFunctionExpression('foo', new CallableTestClass(), true);
+
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessageMatches('#^The last parameter of "Twig\\\\Tests\\\\Node\\\\Expression\\\\CallableTestClass\\:\\:__invoke" for function "foo" must be an array with default value, eg\\. "array \\$arg \\= \\[\\]"\\.$#');
+
+        $this->getArguments($node, [new CallableTestClass(), []]);
     }
 
     public static function customStaticFunction($arg1, $arg2 = 'default', $arg3 = [])
@@ -107,6 +139,10 @@ class CallTest extends TestCase
     }
 
     public function customFunction($arg1, $arg2 = 'default', $arg3 = [])
+    {
+    }
+
+    public function customFunctionWithArbitraryArguments()
     {
     }
 
@@ -118,35 +154,14 @@ class CallTest extends TestCase
         return $m->invokeArgs($call, $args);
     }
 
-    public function customFunctionWithArbitraryArguments()
+    private function createFunctionExpression($name, $callable, $isVariadic = false): Node_Expression_Call
     {
-    }
-
-    public function testResolveArgumentsWithMissingParameterForArbitraryArgumentsOnFunction()
-    {
-        $this->expectException(\LogicException::class);
-        $this->expectExceptionMessageMatches('#^The last parameter of "Twig\\\\Tests\\\\Node\\\\Expression\\\\custom_Twig_Tests_Node_Expression_CallTest_function" for function "foo" must be an array with default value, eg\\. "array \\$arg \\= \\[\\]"\\.$#');
-
-        $node = new Node_Expression_Call([], ['type' => 'function', 'name' => 'foo', 'is_variadic' => true]);
-        $node->getArguments('Twig\Tests\Node\Expression\custom_Twig_Tests_Node_Expression_CallTest_function', []);
-    }
-
-    public function testResolveArgumentsWithMissingParameterForArbitraryArgumentsOnObject()
-    {
-        $this->expectException(\LogicException::class);
-        $this->expectExceptionMessageMatches('#^The last parameter of "Twig\\\\Tests\\\\Node\\\\Expression\\\\CallableTestClass\\:\\:__invoke" for function "foo" must be an array with default value, eg\\. "array \\$arg \\= \\[\\]"\\.$#');
-
-        $node = new Node_Expression_Call([], ['type' => 'function', 'name' => 'foo', 'is_variadic' => true]);
-        $node->getArguments(new CallableTestClass(), []);
+        return new Node_Expression_Call(new TwigFunction($name, $callable, ['is_variadic' => $isVariadic]), new EmptyNode(), 0);
     }
 }
 
-class Node_Expression_Call extends CallExpression
+class Node_Expression_Call extends FunctionExpression
 {
-    public function getArguments($callable, $arguments)
-    {
-        return parent::getArguments($callable, $arguments);
-    }
 }
 
 class CallableTestClass
@@ -156,6 +171,6 @@ class CallableTestClass
     }
 }
 
-function custom_Twig_Tests_Node_Expression_CallTest_function($required)
+function custom_call_test_function($required)
 {
 }
